@@ -1,4 +1,4 @@
-# CS50x-FinalProject
+# CS50x - Final Project
 
 CS50x - Harvard's Introduction to Computer Science - Final Project
 
