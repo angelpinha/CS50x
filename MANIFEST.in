@@ -1,0 +1,30 @@
+# This file is used to manage all files inside the project
+# And handle them by Python.
+# 
+# Following commands can be used:
+#
+# include: This command is used to include specific files or directories in
+# the package.
+# 
+# graft: This command is used to include entire directories and their
+# contents in the package.
+# 
+# global-exclude: This command is used to exclude specific files or
+# directories from the package.
+# 
+# recursive-include: This command is used to include specific files or
+# directories and all their subdirectories and files in the package.
+# 
+# recursive-exclude: This command is used to exclude specific files or
+# directories and all their subdirectories and files from the package.
+# prune: This command is used to exclude specific directories and their
+# contents from the package, even if they are included with an "include" or
+# "graft" command.
+# 
+# extra-files: This command is used to specify additional files that should
+# be included in the package, even if they are not part of the package's
+# source distribution.
+
+graft ./static
+graft ./templates
+global-exclude *.pyc
