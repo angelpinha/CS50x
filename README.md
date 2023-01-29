@@ -1,4 +1,4 @@
-# CS50x-FinalProject
+# CS50x - Final Project
 
 CS50x - Harvard's Introduction to Computer Science - Final Project
 
@@ -8,15 +8,19 @@ CS50x - Harvard's Introduction to Computer Science - Final Project
 
 To launch the application, user should do the following steps:
 
-- Install Python > 3.4
+- Install Python > 3.4 on your computer.
 
-To install the virtual development environment:
+To install the Virtual Development Environment:
 
 ```Bash
   python -m venv venv
+
+# OR
+
+  python -m venv .venv
 ```
 
-NOTE: venv folder for Linux and MacOS can be named `.venv` to make the folder hidden.
+NOTE: venv folder for Linux and MacOS can be named `.venv` to make the venv folder hidden.
 
 Virtual environment activation:
 
@@ -24,6 +28,7 @@ Windows:
 ```
   # In cmd.exe
   venv\Scripts\activate.bat
+
   # In PowerShell
   venv\Scripts\Activate.ps1
 ```
@@ -32,22 +37,29 @@ Linux and MacOS:
 
 ```Bash
   source venv/bin/activate
+
+# OR
+
+  source .venv/bin/activate
+
+# Given the case
 ```
-or
+
+Once the virtual environment is activated, you should install all project dependencies by running:
 
 ```Bash
-  source .venv/bin/activate
+  pip install -e .
 ```
 
-Given the proper case.
+NOTE: This step could be done only the first time you try to run the app.
 
-Once the virtual environment is activated, you should install the following dependencies:
+To know which packages are used by the app, you can run inside the Virtual Environment:
 
+```Bash
+pip list --local
 ```
-  pip install Flask
-```
 
-And finally run in the project folder:
+Once all packages are installed into the Virtual Environment, you can run the app by entering the following command:
 
 For normal usage:
 ```Bash
@@ -59,7 +71,7 @@ For development usage:
   flask --debug run
 ```
 
-The project should be hosted on the following adress:
+The project should be hosted on the following adress by default:
 
 http://127.0.0.1:5000/
 
