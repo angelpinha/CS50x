@@ -3,7 +3,7 @@
 CS50x - Harvard's Introduction to Computer Science - Final Project
 
 Inventory Management Software
-this is a pureba
+
 ---
 
 ## Usage:
