@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Invoices
+{% endblock%}
+
+{% block pagename %}
+<article>
+  <header>
+    <h1>Invoices</h1>
+  </header>
+
+  <form class="container">
+    <div class="grid">
+      <label for="search-string">
+        <input type="search" id="search" name="search" placeholder="Search">
+      </label>
+
+      <label for="filter">
+        <select id="condition" required>
+          <option value="Empty" selected>Filter</option>
+          <option>Transaction ID</option>
+          <option>Seller</option>
+          <option>Customer</option>
+          <option>Barcode</option>
+          <option>Date</option>
+        </select>
+      </label>
+
+      <button type="submit">Submit</button>
+    </div>
+  </form>
+</article>
+
+<hr>
+{% endblock %}
+
+{% block main %}
+<figure>
+  <table role="grid">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Seller</th>
+        <th scope="col">Customer</th>
+        <th scope="col">Item</th>
+        <th scope="col">Barcode</th>
+        <th scope="col">Units</th>
+        <th scope="col">Price</th>
+        <th scope="col">Total</th>
+        <th scope="col">Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">1</th>
+        <td>Nure</td>
+        <td>Andres</td>
+        <td>A pair of socks</td>
+        <td>0012345</td>
+        <td>3</td>
+        <td>5$</td>
+        <td>15$</td>
+        <td>01/2/2023 10:45:17 AM</td>
+      </tr>
+      <tr>
+        <th scope="row">2</th>
+        <td>Angel</td>
+        <td>Miguel</td>
+        <td>A cup of glass</td>
+        <td>0012341</td>
+        <td>2</td>
+        <td>2$</td>
+        <td>4$</td>
+        <td>15/12/2023 3:20:15 PM</td>
+      </tr>
+      <tr>
+        <th scope="row">2</th>
+        <td>Angel</td>
+        <td>Miguel</td>
+        <td>A pair of shoes</td>
+        <td>0012332</td>
+        <td>1</td>
+        <td>20$</td>
+        <td>20$</td>
+        <td>15/12/2023 3:20:15 PM</td>
+      </tr>
+    </tbody>
+  </table>
+</figure>
+{% endblock %}

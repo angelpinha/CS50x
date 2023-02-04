@@ -10,23 +10,26 @@
   </head>
 
   <body>
-    <nav class="container">
+    <nav class="container-fluid">
       <ul>
         <li><a href="/" role="button">Home<a></li>
       </ul>
       <ul>
+        <li><a href="/invoices" class="secondary">Invoices</a></li>
         <li><a href="/about" class="secondary">About</a></li>
       </ul>
     </nav>
+
     <hr>
 
-    <main class="container">
+    <main class="container-fluid">
       {% block pagename %}{% endblock %}
       {% block main %}{% endblock %}
     </main>
 
-    <footer class="container">
     <hr>
+
+    <footer class="container-fluid">
       <nav>
         <small>
           Code licenced
