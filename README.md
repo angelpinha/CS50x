@@ -8,6 +8,16 @@ Inventory Management Software
 
 ## Usage:
 
+### Fast deployment:
+
+If you are in a hurry an just need to run the app, installing all the dependencies in your local machine, execute the following command in Bash:
+
+```Bash
+  python run.py  
+```
+
+NOTE: You should be inside the main project folder.
+
 To launch the application, user should do the following steps:
 
 - Install Python > 3.4 on your computer.
