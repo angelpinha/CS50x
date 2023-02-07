@@ -1,9 +1,18 @@
-from flask import Flask, render_template, url_for
+import os
+from flask import Flask, Blueprint, render_template, url_for
 from sqlalchemy import create_engine, text
 
+# Create the App object
 app = Flask(__name__)
-
+# Initialize the database
 db = create_engine("sqlite+pysqlite:///prototype.db", echo=True)
+
+# Import Blueprints
+from views.auth import auth
+# Register Blueprints into the main app
+app.register_blueprint(auth)
+
+### TODO: This should be organized into Blueprints to avoid cluttering of app
 
 @app.route('/')
 def index():
@@ -25,3 +34,4 @@ def inventory():
                 FROM items, inventory WHERE items.id = inventory.item_id"""))
 
     return render_template('inventory.html', table=table)
+###############################################################################
