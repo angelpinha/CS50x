@@ -7,7 +7,7 @@ from views.auth import auth
 # Create the App object
 app = Flask(__name__)
 # Initialize the database
-db = create_engine("sqlite+pysqlite:///prototype.db", echo=True)
+db = create_engine("sqlite+pysqlite:///data.db", echo=True)
 
 
 @app.route("/")
@@ -31,8 +31,8 @@ def inventory():
     with db.connect() as conn:
         query = text(
             """
-                SELECT name, cost_center, format, size, size_value,
-                    initial_value, warehouse, counter
+                SELECT name, department, format, unit, purchase_value,
+                    initial_quantity, stored_quantity
                 FROM items, inventory
                 WHERE items.id = inventory.item_id
             """
