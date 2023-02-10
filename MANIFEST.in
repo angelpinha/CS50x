@@ -27,4 +27,5 @@
 
 graft ./static
 graft ./templates
+graft ./views
 global-exclude *.pyc

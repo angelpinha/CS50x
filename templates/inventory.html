@@ -1,34 +1,33 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Inventory
+Inventory
 {% endblock %}
 
 {% block main %}
-    <main class="container">
-        <table role="grid">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Cost center</th>
-                    <th>Format</th>
-                    <th>Size</th>
-                    <th>Size value</th>
-                    <th>Initial value</th>
-                    <th>Warehouse</th>
-                    <th>Counter</th>
-                </tr>
-            </thead>
-            <tbody style="margin:10px">
-                {% for row in table %}
-                <tr>
-                    {% for data in row %}
-                    <td>{{ data }}</td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </main>
+<main class="container">
+  <table role="grid">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Cost center</th>
+        <th>Format</th>
+        <th>Size</th>
+        <th>Size value</th>
+        <th>Initial value</th>
+        <th>Warehouse</th>
+        <th>Counter</th>
+      </tr>
+    </thead>
+    <tbody style="margin:10px">
+      {% for row in table %}
+      <tr>
+        {% for data in row %}
+        <td>{{ data }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</main>
 {% endblock %}
-
