@@ -1,33 +1,60 @@
 {% extends "layout.html" %}
 
 {% block title %}
-Inventory
+    Inventory
+{% endblock %}
+{% block pagename %}
+<article>
+  <header>
+    <h1>Inventory</h1>
+  </header>
+
+  <form class="container">
+    <div class="grid">
+      <label for="search-string">
+        <input type="search" id="search" name="search" placeholder="Search">
+      </label>
+
+      <label for="filter">
+        <select id="condition" required>
+          <option value="Empty" selected>Filter</option>
+          <option>Name</option>
+          <option>Id</option>
+          <!-- {{for }}<option></option>{{endfor}} -->
+        </select>
+      </label>
+  
+      <button type="submit">Submit</button>
+    </div>
+  </form>
+</article>
 {% endblock %}
 
 {% block main %}
+  
 <main class="container">
   <table role="grid">
     <thead>
       <tr>
         <th>Name</th>
-        <th>Cost center</th>
+        <th>Department</th>
         <th>Format</th>
-        <th>Size</th>
-        <th>Size value</th>
-        <th>Initial value</th>
-        <th>Warehouse</th>
-        <th>Counter</th>
+        <th>Unit</th>
+        <th>purchase value</th>
+        <th>Initial quantity</th>
+        <th>Stored quantity</th>
       </tr>
     </thead>
-    <tbody style="margin:10px">
-      {% for row in table %}
+    <tbody>
+    {% for row in table %}
       <tr>
-        {% for data in row %}
+      {% for data in row %}
         <td>{{ data }}</td>
-        {% endfor %}
-      </tr>
       {% endfor %}
+      </tr>
+    {% endfor %}
     </tbody>
   </table>
 </main>
 {% endblock %}
+
