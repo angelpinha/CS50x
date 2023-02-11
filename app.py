@@ -40,5 +40,6 @@ def inventory():
         table = conn.execute(query)
     return render_template("inventory.html", table=table)
 
+
 # Register Blueprints into the main app
 app.register_blueprint(auth)
