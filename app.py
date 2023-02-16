@@ -1,13 +1,22 @@
 from flask import Flask, render_template
-from sqlalchemy import create_engine, text
+import os
+
+# Seting the database session for global usage
+from db import db_session
 
 # Import Blueprints
 from views.auth import auth
+from views.management import management
+
 
 # Create the App object
 app = Flask(__name__)
-# Initialize the database
-db = create_engine("sqlite+pysqlite:///data.db", echo=True)
+
+
+# Close db connection when finish request
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
 
 
 @app.route("/")
@@ -21,25 +30,6 @@ def about():
     return render_template("about.html")
 
 
-@app.route("/invoices")
-def invoices():
-    return render_template("invoices.html")
-
-
-@app.route("/inventory")
-def inventory():
-    with db.connect() as conn:
-        query = text(
-            """
-                SELECT name, department, format, unit, purchase_value,
-                    initial_quantity, stored_quantity
-                FROM items, inventory
-                WHERE items.id = inventory.item_id
-            """
-        )
-        table = conn.execute(query)
-    return render_template("inventory.html", table=table)
-
-
 # Register Blueprints into the main app
 app.register_blueprint(auth)
+app.register_blueprint(management)
