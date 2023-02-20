@@ -1,5 +1,4 @@
 from flask import Flask, render_template
-import sqlite3
 
 
 def create_app():
@@ -25,6 +24,7 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(management)
 
+    # Initialize database after app initialitation
     from . import db
     db.init_app(app)
 
