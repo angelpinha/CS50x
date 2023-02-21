@@ -20,7 +20,7 @@ def get_db():
 
 # Checking if a global connection was created, to close it
 def close_db(e=None):
-    # Remove db attribute of g if equal to None
+    # Remove attribute if it exists, otherwise return None
     db = g.pop("db", None)
 
     # Close connection if db attribute of g is not None
@@ -28,7 +28,7 @@ def close_db(e=None):
         db.close()
 
 
-# Get schema from db
+# Get schema from sql file to db
 def schema_db():
     db = get_db()
 
@@ -39,7 +39,7 @@ def schema_db():
 @click.command('schema-db')
 def schema_db_command():
     schema_db()
-    click.echo('Success.')
+    click.echo('Initialized the database.')
 
 
 def init_app(app):
