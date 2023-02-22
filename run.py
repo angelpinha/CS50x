@@ -20,7 +20,7 @@ else:
 
 commands = ["pip install -e .", run_command]
 
-if development == True:
+if development is True:
     print("Running app in DEVELOPMENT mode")
 else:
     print("Running app in NORMAL mode")

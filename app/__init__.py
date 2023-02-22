@@ -4,10 +4,9 @@ from flask import Flask, render_template
 def create_app():
     # Create and configure the app
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'dev'
-    app.config["SQLite_Database_URI"] = 'data.db'
+    app.config["SECRET_KEY"] = "dev"
+    app.config["SQLite_Database_URI"] = "data.db"
 
-    
     from .views.auth import auth
     from .views.management import management
 
@@ -15,8 +14,7 @@ def create_app():
     def index():
         return render_template("index.html")
 
-
-    # TODO: Move about function to corresponding blueprint 
+    # TODO: Move about function to corresponding blueprint
     @app.route("/about")
     def about():
         return render_template("about.html")
@@ -26,6 +24,7 @@ def create_app():
 
     # Initialize database after app initialitation
     from . import db
+
     db.init_app(app)
 
     return app

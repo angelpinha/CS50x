@@ -10,7 +10,7 @@ def register():
 
 @auth.route("/login")
 def login():
-    return "Hello, Login!"
+    return render_template("auth/login.html")
 
 
 @auth.route("/password")
