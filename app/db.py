@@ -9,7 +9,7 @@ def get_db():
     if "db" not in g:
         g.db = sqlite3.connect(
             current_app.config["SQLite_Database_URI"],
-            Find the data type of each db column
+            # Find the data type of each db column
             detect_types=sqlite3.PARSE_DECLTYPES,
         )
         # The connection will return dicts as rows
