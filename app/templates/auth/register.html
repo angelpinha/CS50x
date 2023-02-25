@@ -1,13 +1,13 @@
 {% extends "auth/auth_layout.html" %}
 {% block title %}
-Login
+Register
 {% endblock %}
 {% block header %}
 <article>
   <header>
-    <h1>Login</h1>
+    <h1>Register</h1>
     <!-- This code retrieves information through the flash module of flask -->
-    {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
+    {% with messages = get_flashed_messages(category_filter=["error"]) %}
     {% if messages %}
     <ul class="flashes container">
       {% for message in messages %}
@@ -17,26 +17,32 @@ Login
     {% endif %}
     {% endwith %}
   </header>
-  <form action="/login" method="post" class="container">
-    <div class="grid">
+  <form action="/register" method="post" class="container">
+    <div class="container">
+      <div class="grid">
+        <label for="first_name">
+          <input type="text" id="first_name" name="first_name" placeholder="First name">
+        </label>
+        <label for="last_name">
+          <input type="text" id="last_name" name="last_name" placeholder="Last name">
+        </label>
+      </div>
       <label for="username">
         <input type="text" id="username" name="username" placeholder="Username">
       </label>
       <label for="password">
         <input type="password" id="password" name="password" placeholder="Password">
       </label>
+      <label for="password_check">
+        <input type="password" id="password_check" name="password_check" placeholder="Confirm password">
+      </label>
     </div>
-    <button type="submit">Log In</button>
-    <!-- Stores the data of next url in case of previously requested route -->
-    <input type="hidden" name="next" value="{{ request.args.get('next', '') }}" />
+    <button type="submit">Submit</button>
   </form>
   <footer>
     <nav>
       <ul>
-        <li><a href="/register" class="outline">Create an account</a></li>
-      </ul>
-      <ul>
-        <li><a href="/recover" class="secondary">Forgot your password?</a></li>
+        <li><a href="/login" class="outline">Already registered?</a></li>
       </ul>
     </nav>
   </footer>

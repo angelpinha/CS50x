@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from app.helpers import login_required
 
 
 def create_app():
@@ -11,10 +12,10 @@ def create_app():
     from .views.management import management
 
     @app.route("/")
+    @login_required
     def index():
         return render_template("index.html")
 
-    # TODO: Move about function to corresponding blueprint
     @app.route("/about")
     def about():
         return render_template("about.html")
