@@ -14,22 +14,18 @@
   <nav class="container-fluid">
     <ul>
       <li>
-        <a href="/" class="primary">
-          <img src="{{ url_for('static', filename='icon.png') }}" alt="Logo"/>
+        <a href="/login" class="primary">
+          <img src="{{ url_for('static', filename='icon.png') }}" alt="Logo" />
         </a>
       <li>
     </ul>
     <ul>
-    {% if session["user_id"] %}
-      <li><a href="/invoices" class="secondary">Invoices</a></li>
-      <li><a href="/inventory" class="secondary">Inventory</a></li>
-      <li><a href="/about" class="secondary">About</a></li>
-      <li><a href="/logout" class="outline"><strong>Log out</strong></a></li>
-    {% endif %}
+      <li><a href="/about" class="outline"><strong>About</strong></a></li>
     </ul>
   </nav>
 
   <hr>
+
 
   <main class="container-fluid">
     {% block header %}{% endblock %}

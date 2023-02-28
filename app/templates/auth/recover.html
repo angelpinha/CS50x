@@ -1,0 +1,32 @@
+{% extends "auth/auth_layout.html" %}
+{% block title %}
+Recover
+{% endblock %}
+{% block header %}
+<article>
+  <header>
+    <h1>Recover Account</h1>
+  </header>
+  <form action="/recover" method="post" class="container">
+    <div class="grid">
+      <label for="first_name">
+        <input type="text" id="first_name" name="first_name" placeholder="First name">
+      </label>
+      <label for="last_name">
+        <input type="text" id="last_name" name="last_name" placeholder="Last name">
+      </label>
+    </div>
+    <label for="username">
+      <input type="text" id="username" name="username" placeholder="Username">
+    </label>
+    <button type="submit">Recover</button>
+  </form>
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="/login" class="outline">Suddenly remembered your password?</a></li>
+      </ul>
+    </nav>
+  </footer>
+</article>
+{% endblock %}
