@@ -65,9 +65,6 @@ def register():
                 else:
                     flash("Password and confirmation must be equal!", "error")
                     return redirect("/register")
-            
-            if fields[key] == "password_check":
-                continue
 
             else:
                 credentials[key] = request.form.get(f"{key}")
