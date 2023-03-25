@@ -158,6 +158,33 @@ def logout():
     return redirect(url_for("auth.login"))
 
 
+@auth.route("/profile")
+def profile():
+    db = get_db()
+
+    rows = db.execute(
+        """
+        SELECT username, first_name, last_name, role
+        FROM users
+        WHERE id = (?)
+        """,
+        (session["user_id"],),
+    ).fetchone()
+
+    username = rows["username"]
+    first_name = rows["first_name"]
+    last_name = rows["last_name"]
+    role = rows["role"]
+
+    return render_template(
+        "auth/profile.html",
+        username=username,
+        first_name=first_name,
+        last_name=last_name,
+        role=role,
+    )
+
+
 @auth.route("/recover")
 def change_password():
     # TODO
