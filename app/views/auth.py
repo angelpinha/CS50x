@@ -10,6 +10,7 @@ from flask import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from app.db import get_db
+from app.helpers import login_required
 
 auth = Blueprint("auth", __name__)
 
@@ -105,6 +106,7 @@ def login():
             "username": "Username",
             "password": "Password",
         }
+
         next_url = request.form.get("next")
 
         for input in fields:
@@ -130,14 +132,22 @@ def login():
             (username,),
         ).fetchone()
 
+        # Checks if username is registered in database
         if rows is None:
             flash("Username not registered", "error")
+            next_url = request.form.get("next")
+            if next_url:
+                return redirect(next_url)
             return render_template("auth/login.html")
 
         auth = check_password_hash(rows["password_hash"], password)
 
+        # Checks if password is valid
         if auth is not True:
             flash("Incorrect password", "error")
+            next_url = request.form.get("next")
+            if next_url:
+                return redirect(next_url)
             return render_template("auth/login.html")
 
         else:
@@ -159,6 +169,7 @@ def logout():
 
 
 @auth.route("/profile")
+@login_required
 def profile():
     db = get_db()
 
@@ -175,6 +186,11 @@ def profile():
     first_name = rows["first_name"]
     last_name = rows["last_name"]
     role = rows["role"]
+
+    # Redirects to a previously requested url if exists
+    next_url = request.form.get("next")
+    if next_url:
+        return redirect(next_url)
 
     return render_template(
         "auth/profile.html",
