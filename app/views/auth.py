@@ -1,3 +1,4 @@
+from io import BytesIO
 from flask import (
     Blueprint,
     render_template,
@@ -9,6 +10,9 @@ from flask import (
     g,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+import qrcode
+import base64
+
 from app.db import get_db
 from app.helpers import login_required
 
@@ -199,6 +203,42 @@ def profile():
         last_name=last_name,
         role=role,
     )
+
+
+@auth.route("/2FA")
+def two_factor_authentication():
+    # Generate the QR code image using the "qrcode" library
+    qr = qrcode.QRCode(
+        version = None,
+        error_correction = qrcode.constants.ERROR_CORRECT_M,
+        box_size = 5,
+        border = 4,
+    )
+    # Data inside the QR code
+    qr.add_data("Two Factor Authentication! :)")
+    # Generated QR size is determined by how much information will be stored
+    qr.make(fit = True)
+    # Translate the above information into a PilImage
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+
+    # Convert the "PilImage" object to a byte stream
+    # This step is implemented this way because there is no need to store
+    # The QR image into a file inside the hard drive
+    byte_stream = BytesIO()
+    # Save the byte stream into a PNG
+    qr_img.save(byte_stream, format="PNG")
+    # Locate the pointer of the byte stream at the first location
+    byte_stream.seek(0)
+
+    # Encode the byte stream as a base64 ascii string
+    # 1) byte_stream.getvalue() gets the bythes from the byte stream
+    # 2) base64.b64encode() encodes the bytes as base64-encoded string
+    # 3) .decode("ascii") converts the byte string to a regular string
+    qr_code_data = base64.b64encode(byte_stream.getvalue()).decode("ascii")
+    # This string can be used in an HTML image tag as the source of the image
+    # Without having to write the image to a file on the server
+
+    return render_template("auth/2fa.html", qr_code_data=qr_code_data)
 
 
 @auth.route("/recover")
