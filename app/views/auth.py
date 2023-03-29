@@ -10,6 +10,7 @@ from flask import (
     g,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+import pyotp
 import qrcode
 import base64
 
@@ -176,7 +177,6 @@ def logout():
 @login_required
 def profile():
     db = get_db()
-
     rows = db.execute(
         """
         SELECT username, first_name, last_name, role
@@ -205,8 +205,29 @@ def profile():
     )
 
 
-@auth.route("/2FA")
-def two_factor_authentication():
+def create_totp_qrcode():
+    # Get username from database
+    db = get_db()
+    rows = db.execute(
+        """
+            SELECT username
+            FROM users
+            WHERE id = (?)
+            """,
+        (session["user_id"],),
+    ).fetchone()
+
+    # ID data inside the TOTP
+    USERNAME = rows["username"]
+    APP_NAME = "CS50x"
+    # Generate a secret key to represent in the QR code
+    SECRET_KEY = pyotp.random_base32()
+
+    # Encapsulate the information to store TOTP inside a QR code later on
+    time_based_otp = pyotp.totp.TOTP(SECRET_KEY).provisioning_uri(
+        name=USERNAME, issuer_name=APP_NAME
+    )
+
     # Generate the QR code image using the "qrcode" library
     qr = qrcode.QRCode(
         version=None,
@@ -215,7 +236,7 @@ def two_factor_authentication():
         border=4,
     )
     # Insert data inside the QR code
-    qr.add_data("Two Factor Authentication! :)")
+    qr.add_data(time_based_otp)
     # Generated QR size based on size of data
     qr.make(fit=True)
     # Convert QR code into an image object
@@ -231,9 +252,74 @@ def two_factor_authentication():
     # 1) byte_stream.getvalue() gets the bytes from the byte stream
     # 2) base64.b64encode() encodes the bytes as base64-encoded string
     # 3) .decode("ascii") converts the byte stream into a regular ascii string
-    qr_code_data = base64.b64encode(byte_stream.getvalue()).decode("ascii")
+    qr_encoded = base64.b64encode(byte_stream.getvalue()).decode("ascii")
 
-    return render_template("auth/2fa.html", qr_code_data=qr_code_data)
+    session["qr_encoded"] = qr_encoded
+    session["qr_key"] = SECRET_KEY
+
+    return
+
+
+@auth.route("/2FA", methods=["GET", "POST"])
+def two_factor_authentication():
+    if request.method == "POST":
+        qr_key = session["qr_key"]
+        user_input_code = int(request.form.get("totp"))
+        current_code = int(pyotp.TOTP(qr_key).now())
+
+        if current_code == user_input_code:
+            # Initialize the database and update totp_key
+            db = get_db()
+            db.execute(
+                """
+                UPDATE users
+                SET totp_key = (?)
+                WHERE id = (?)
+                """,
+                (
+                    qr_key,
+                    session["user_id"],
+                ),
+            )
+            db.commit()
+
+            flash("Two factor authentication has been set", "success")
+            return redirect("/2FA")
+
+        else:
+            flash("Invalid 6-digit code, try again", "error")
+            return redirect("/2FA")
+
+    else:
+        # Initialize the database and get totp_key from database
+        db = get_db()
+        rows = db.execute(
+            """
+                SELECT totp_key
+                FROM users
+                WHERE id = (?)
+                """,
+            (session["user_id"],),
+        ).fetchone()
+
+        if rows["totp_key"] is None:
+            is_totp_set = False
+
+            if "qr_encoded" not in session:
+                create_totp_qrcode()
+                qr_encoded = session["qr_encoded"]
+                qr_key = session["qr_key"]
+
+            else:
+                qr_encoded = session["qr_encoded"]
+                qr_key = session["qr_key"]
+
+            return render_template(
+                "auth/2fa.html", qr_encoded=qr_encoded, is_totp_set=is_totp_set
+            )
+        else:
+            is_totp_set = True
+            return render_template("auth/2fa.html", is_totp_set=is_totp_set)
 
 
 @auth.route("/recover")
