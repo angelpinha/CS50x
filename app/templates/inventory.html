@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Inventory
+Inventory
 {% endblock %}
 {% block header %}
 <article>
@@ -11,19 +11,19 @@
 
   <form class="container">
     <div class="grid">
-      <label for="search-string">
+      <label for="search">
         <input type="search" id="search" name="search" placeholder="Search">
       </label>
 
       <label for="filter">
-        <select id="condition" required>
-          <option value="Empty" selected>Filter</option>
+        <select id="filter" required>
+          <option value="" selected>Filter</option>
           <option>Name</option>
           <option>Id</option>
           <!-- {{for }}<option></option>{{endfor}} -->
         </select>
       </label>
-  
+
       <button type="submit">Submit</button>
     </div>
   </form>
@@ -31,8 +31,7 @@
 {% endblock %}
 
 {% block main %}
-  
-<main class="container">
+<div class="container">
   <table role="grid">
     <thead>
       <tr>
@@ -46,15 +45,14 @@
       </tr>
     </thead>
     <tbody>
-    {% for row in table %}
+      {% for row in table %}
       <tr>
-      {% for data in row %}
+        {% for data in row %}
         <td>{{ data }}</td>
-      {% endfor %}
+        {% endfor %}
       </tr>
-    {% endfor %}
+      {% endfor %}
     </tbody>
   </table>
-</main>
+</div>
 {% endblock %}
-

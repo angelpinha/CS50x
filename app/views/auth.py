@@ -56,7 +56,7 @@ def register():
 
         db = get_db()
         credentials = {}
-        role = "inactive"
+        role = "Inactive"
 
         # Stores key, value pairs in credentials dictionary according to fields keys
         for key, value in fields.items():
@@ -130,7 +130,7 @@ def login():
 
         rows = db.execute(
             """
-            SELECT id, password_hash
+            SELECT id, password_hash, totp_key
             FROM users
             WHERE username = (?)
             """,
@@ -155,6 +155,17 @@ def login():
                 return redirect(next_url)
             return render_template("auth/login.html")
 
+        totp_key = rows["totp_key"]
+
+        if totp_key is not None:
+            session.clear()
+            session["user_id_pending"] = rows["id"]
+            next_url = request.form.get("next")
+            if next_url:
+                return redirect(url_for("auth.confirm_2fa", next=next_url))
+            else:
+                return render_template("auth/confirm_2fa.html")
+
         else:
             session.clear()
             session["user_id"] = rows["id"]
@@ -162,9 +173,54 @@ def login():
             if next_url:
                 return redirect(next_url)
             return redirect(url_for("index"))
-
     else:
         return render_template("auth/login.html")
+
+
+@auth.route("/confirm_2fa", methods=["GET", "POST"])
+def confirm_2fa():
+    if request.method == "POST":
+        if session["user_id_pending"]:
+            next_url = request.form.get("next")
+            user_id = session["user_id_pending"]
+            session.clear()
+
+            db = get_db()
+            rows = db.execute(
+                """
+                SELECT id, totp_key
+                FROM users
+                WHERE id = (?)
+                """,
+                (user_id,),
+            ).fetchone()
+
+            totp_key = rows["totp_key"]
+
+            try:
+                user_input_code = int(request.form.get("totp"))
+            except ValueError:
+                flash("Must provide a valid 6-digit 2FA code", "error")
+                return redirect(url_for("auth.login"))
+
+            current_code = int(pyotp.TOTP(totp_key).now())
+
+            if user_input_code == current_code:
+                session.clear()
+                session["user_id"] = rows["id"]
+                if next_url:
+                    return redirect(next_url)
+                # Redirects to previously requested URL if exists
+                return redirect(url_for("index"))
+            else:
+                session.clear()
+                flash("Must provide a valid 6-digit 2FA code", "error")
+                return redirect(url_for("auth.login"))
+        else:
+            session.clear()
+            return redirect(url_for("auth.login"))
+    else:
+        return render_template("auth/confirm_2fa.html")
 
 
 @auth.route("/logout")
@@ -183,7 +239,7 @@ def profile():
         FROM users
         WHERE id = (?)
         """,
-        (session["user_id"],),
+        (g.user[0],),
     ).fetchone()
 
     username = rows["username"]
@@ -204,7 +260,7 @@ def profile():
         role=role,
     )
 
-
+@login_required
 def create_totp_qrcode():
     # Get username from database
     db = get_db()
@@ -214,7 +270,7 @@ def create_totp_qrcode():
             FROM users
             WHERE id = (?)
             """,
-        (session["user_id"],),
+        (g.user[0],),
     ).fetchone()
 
     # ID data inside the TOTP
@@ -261,10 +317,17 @@ def create_totp_qrcode():
 
 
 @auth.route("/2FA", methods=["GET", "POST"])
+@login_required
 def two_factor_authentication():
     if request.method == "POST":
         qr_key = session["qr_key"]
-        user_input_code = int(request.form.get("totp"))
+
+        try:
+            user_input_code = int(request.form.get("totp"))
+        except ValueError:
+            flash("Must provide a valid 6-digit 2FA code", "error")
+            return redirect("/2FA")
+
         current_code = int(pyotp.TOTP(qr_key).now())
 
         if current_code == user_input_code:
@@ -278,10 +341,13 @@ def two_factor_authentication():
                 """,
                 (
                     qr_key,
-                    session["user_id"],
+                    g.user[0],
                 ),
             )
             db.commit()
+
+            session.pop("qr_encoded", None)
+            session.pop("qr_key", None)
 
             flash("Two factor authentication has been set", "success")
             return redirect("/2FA")
@@ -323,6 +389,6 @@ def two_factor_authentication():
 
 
 @auth.route("/recover")
-def change_password():
+def recover_account():
     # TODO
     return render_template("auth/recover.html")
