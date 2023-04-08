@@ -2,6 +2,7 @@ CREATE TABLE "users" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"username"	TEXT NOT NULL UNIQUE,
 	"password_hash"	BLOB NOT NULL,
+	"uuid" TEXT NOT NULL,
 	"totp_key" TEXT,
 	"first_name"	TEXT NOT NULL,
 	"last_name"	TEXT NOT NULL,
