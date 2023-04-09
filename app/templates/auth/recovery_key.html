@@ -18,7 +18,6 @@ Recovery key
     </ul>
     {% endif %}
     {% endwith %}
-    {{ testype }}
   </header>
   <div class="container">
     <p>
@@ -47,7 +46,7 @@ Recovery key
 
     <h2>Generating a new recovery key</h2>
 
-    <form action="/RC" method="post" class="container">
+    <form action="/recovery_key" method="post" class="container">
       <p>
         If you suspect that your recovery key has been compromised, you
         can generate a new one immediately by typing "<strong><i>generate a
