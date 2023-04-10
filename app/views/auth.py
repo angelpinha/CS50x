@@ -16,7 +16,7 @@ import qrcode
 import base64
 
 from app.db import get_db
-from app.helpers import login_required
+from app.helpers import login_required, confirm_2fa_pending
 
 auth = Blueprint("auth", __name__)
 
@@ -170,7 +170,7 @@ def login():
             if next_url:
                 return redirect(url_for("auth.confirm_2fa", next=next_url))
             else:
-                return render_template("auth/confirm_2fa.html")
+                return redirect(url_for("auth.confirm_2fa"))
 
         else:
             session.clear()
@@ -185,47 +185,62 @@ def login():
 
 
 @auth.route("/confirm_2fa", methods=["GET", "POST"])
+@confirm_2fa_pending
 def confirm_2fa():
     if request.method == "POST":
-        if session["user_id_pending"]:
-            next_url = request.form.get("next")
-            user_id = session["user_id_pending"]
-            session.clear()
+        next_url = request.form.get("next")
+        user_id = session["user_id_pending"]
 
-            db = get_db()
-            rows = db.execute(
-                """
-                SELECT id, totp_key
-                FROM users
-                WHERE id = (?)
-                """,
-                (user_id,),
-            ).fetchone()
+        db = get_db()
+        rows = db.execute(
+            """
+            SELECT id, totp_key
+            FROM users
+            WHERE id = (?)
+            """,
+            (user_id,),
+        ).fetchone()
 
-            totp_key = rows["totp_key"]
+        totp_key = rows["totp_key"]
 
-            try:
-                user_input_code = int(request.form.get("totp"))
-            except ValueError:
-                flash("Must provide a valid 6-digit 2FA code", "error")
-                return redirect(url_for("auth.login"))
-
-            current_code = int(pyotp.TOTP(totp_key).now())
-
-            if user_input_code == current_code:
-                session.clear()
-                session["user_id"] = rows["id"]
-                if next_url:
-                    return redirect(next_url)
-                # Redirects to previously requested URL if exists
-                return redirect(url_for("index"))
+        try:
+            user_input_code = int(request.form.get("totp"))
+        except ValueError:
+            flash("Must provide a valid 6-digit 2FA code", "error")
+            if next_url:
+                return redirect(url_for("auth.confirm_2fa", next=next_url))
             else:
-                session.clear()
-                flash("Must provide a valid 6-digit 2FA code", "error")
-                return redirect(url_for("auth.login"))
-        else:
+                return redirect(url_for("auth.confirm_2fa"))
+
+        current_code = int(pyotp.TOTP(totp_key).now())
+
+        if user_input_code == current_code:
             session.clear()
-            return redirect(url_for("auth.login"))
+            session["user_id"] = rows["id"]
+            if next_url:
+                return redirect(next_url)
+            # Redirects to previously requested URL if exists
+            return redirect(url_for("index"))
+        else:
+            # Count for wrong attempts
+            try:
+                session["TRIES"] += 1
+            except KeyError:
+                session["TRIES"] = 1
+
+            flash("Must provide a valid 6-digit 2FA code", "error")
+
+            if session["TRIES"] >= 2:
+                session["messages"] = (
+                    "Must provide a valid 6-digit 2FA code",
+                    "Please, provide your credentials",
+                )
+                return redirect(url_for("auth.login"))
+
+            if next_url:
+                return redirect(url_for("auth.confirm_2fa", next=next_url))
+            else:
+                return redirect(url_for("auth.confirm_2fa"))
     else:
         return render_template("auth/confirm_2fa.html")
 
