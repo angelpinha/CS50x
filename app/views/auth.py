@@ -231,12 +231,7 @@ def confirm_2fa():
             flash("Must provide a valid 6-digit 2FA code", "error")
 
             if session["TRIES"] >= 2:
-                session["messages"] = (
-                    "Must provide a valid 6-digit 2FA code",
-                    "Please, provide your credentials",
-                )
                 return redirect(url_for("auth.login"))
-
             if next_url:
                 return redirect(url_for("auth.confirm_2fa", next=next_url))
             else:
