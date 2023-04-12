@@ -21,6 +21,11 @@ Recovery key
   </header>
 
   <div class="container">
+  <h2>Recovery key</h2>
+  <hr>
+  </div>
+
+  <div class="container">
     <p>
       Click on the following button to reveal your account recovery key. This
       key will be requested in case you completely forget or miss your password.
@@ -43,7 +48,6 @@ Recovery key
         <a href="#close" aria-label="Close" class="close" data-target="rk_modal" onClick="toggleModal(event)"></a>
         <h3>Recovery key</h3>
       </header>
-      {% if advice == True %}
       <div class="container">
         <p class="mx-centered">
           <mark>
@@ -54,67 +58,18 @@ Recovery key
           </mark>
         </p>
       </div>
-      {% endif %}
-      {% if advice == False %}
-      <div class="container">
-        <p class="mx-centered">
-          <mark>
-            <strong>
-              Please, enable two-factor authentication in order to show your account recovery key.
-            </strong>
-          </mark>
-        </p>
-      </div>
-      {% endif %}
       <br>
 
       <input type="text" style="font-family:monospace; font-weight: bold; text-align:center;" value="{{ uuid }}"
         readonly>
-      {% if advice == False %}
-      <a href="/2FA" class="container" role="button">Enable two-factor authentication</a>
-      {% endif %}
 
       <footer>
-        {% if advice == False %}
-        <a href="#confirm" role="button" class="outline" data-target="rk_modal" onClick="toggleModal(event)">
-          <strong>Understood</strong>
-        </a>
-        {% endif %}
-        {% if advice == True %}
         <a href="#confirm" role="button" data-target="rk_modal" onClick="toggleModal(event)">
           <strong>Understood</strong>
         </a>
-        {% endif %}
       </footer>
     </article>
   </dialog>
-
-  <div class="container">
-    <hr>
-    <h2>Generating a new recovery key</h2>
-
-    <form action="/recovery_key" method="post" class="container">
-      <p>
-        If you suspect that your recovery key has been compromised, you
-        can generate a new one immediately by typing "<strong><i>generate a
-            new recovery key</strong></i>" in the following input text field and
-        submitting the form down below.
-      </p>
-
-      <label for="uuid">
-        <input type="text" id="generate" name="generate"
-          placeholder="Fill out this form and submit it to generate a new recovery key." autocomplete="off">
-      </label>
-
-      <p>
-        <i>
-          Please note that generating a new recovery key will <b>replace</b> the previous one.
-        </i>
-      </p>
-
-      <button type="submit"><strong>Submit</strong></button>
-    </form>
-  </div>
 
   <footer>
     <nav>

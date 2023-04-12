@@ -9,7 +9,6 @@ from flask import (
     g,
 )
 
-# from werkzeug.security import check_password_hash, generate_password_hash
 import uuid
 import pyotp
 import qrcode
@@ -56,7 +55,7 @@ def profile():
         return redirect(next_url)
 
     return render_template(
-        "auth/profile.html",
+        "profile/profile.html",
         username=username,
         first_name=first_name,
         last_name=last_name,
@@ -131,9 +130,9 @@ def two_factor_authentication():
             flash("Must provide a valid 6-digit 2FA code", "error")
             return redirect("/2FA")
 
-        current_code = int(pyotp.TOTP(qr_key).now())
+        verify_otp = pyotp.TOTP(qr_key).verify(user_input_code)
 
-        if current_code == user_input_code:
+        if verify_otp is True:
             # Initialize the database and update totp_key
             db = get_db()
             db.execute(
@@ -168,7 +167,7 @@ def two_factor_authentication():
                 FROM users
                 WHERE id = (?)
                 """,
-            (session["user_id"],),
+            (g.user[0],),
         ).fetchone()
 
         if rows["totp_key"] is None:
@@ -184,20 +183,99 @@ def two_factor_authentication():
                 qr_key = session["qr_key"]
 
             return render_template(
-                "auth/2fa.html", qr_encoded=qr_encoded, is_totp_set=is_totp_set
+                "profile/2fa.html", qr_encoded=qr_encoded, is_totp_set=is_totp_set
             )
         else:
             is_totp_set = True
-            return render_template("auth/2fa.html", is_totp_set=is_totp_set)
+            return render_template("profile/2fa.html", is_totp_set=is_totp_set)
 
 
 @user_profile.route("/recovery_key", methods=["GET", "POST"])
 @login_required
 def recovery_key():
-    if request.method == "POST":
-        generate = request.form.get("generate").lower()
-        confirmation = "generate a new recovery key"
-        if generate == confirmation:
+    if "show_recovery_key" in request.form:
+        # Counter for missing credentials
+        missing_credentials = 0
+        fields = {
+            "rk_totp": "2FA 6-Digit code",
+        }
+
+        # Makes sure every input has been filled
+        for input in fields:
+            if not request.form.get(f"{input}"):
+                flash(f"Must provide {fields[input]}", "error")
+                missing_credentials += 1
+                continue
+
+        if missing_credentials != 0:
+            return redirect("/recovery_key")
+
+        try:
+            rk_totp = int(request.form.get("rk_totp"))
+        except ValueError:
+            flash("Must provide a valid 6-digit 2FA code", "error")
+            return redirect("/recovery_key")
+
+        db = get_db()
+        totp_key = db.execute(
+            """
+            SELECT totp_key
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()[0]
+
+        verify_otp = pyotp.TOTP(totp_key).verify(rk_totp)
+
+        if verify_otp is True:
+            session["reveal_rk_info"] = True
+            return redirect("/reveal_rk")
+
+        else:
+            flash("Invalid 2FA code", "error")
+            return redirect("/recovery_key")
+
+    if "generate_new_recovery_key" in request.form:
+        # Counter for missing credentials
+        missing_credentials = 0
+        fields = {
+            "rk_generate": "Text confirmation on form",
+            "rk_generate_totp": "2FA 6-Digit code",
+        }
+
+        # Makes sure every input has been filled
+        for input in fields:
+            if not request.form.get(f"{input}"):
+                flash(f"Must provide {fields[input]}", "error")
+                missing_credentials += 1
+                continue
+
+        if missing_credentials != 0:
+            return redirect("/recovery_key")
+
+        try:
+            user_totp = int(request.form.get("rk_generate_totp"))
+        except ValueError:
+            flash("Must provide a valid 6-digit 2FA code", "error")
+            return redirect("/recovery_key")
+
+        user_confirmation = request.form.get("rk_generate").lower()
+        confirmation_message = "generate a new recovery key"
+
+        db = get_db()
+        totp_key = db.execute(
+            """
+            SELECT totp_key
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()[0]
+
+        verify_otp = pyotp.TOTP(totp_key).verify(user_totp)
+
+        if user_confirmation == confirmation_message and verify_otp:
             UUID = str(uuid.uuid4()).upper()
             db = get_db()
             db.execute(
@@ -213,7 +291,6 @@ def recovery_key():
             )
             db.commit()
             flash("New recovery key has been generated!", "success")
-            flash("Please keep it in a safe place", "success")
             return redirect("/recovery_key")
         else:
             flash("Could not generate a new recovery key!", "error")
@@ -231,17 +308,30 @@ def recovery_key():
         ).fetchone()[0]
 
         if TOTP is None:
-            UUID = "---------- Hidden ----------"
-            advice = False
-
+            is_totp_set = False
         else:
-            UUID = db.execute(
-                """
-                SELECT uuid
-                FROM users
-                WHERE id = (?)
-                """,
-                (g.user[0],),
-            ).fetchone()[0]
-            advice = True
-    return render_template("auth/recovery_key.html", uuid=UUID, advice=advice)
+            is_totp_set = True
+
+        return render_template("profile/recovery_key.html", is_totp_set=is_totp_set)
+
+
+@user_profile.route("/reveal_rk")
+@login_required
+def reveal_rk():
+    if session.get("reveal_rk_info") is True:
+        session["reveal_rk_info"] = False
+
+        db = get_db()
+        UUID = db.execute(
+            """
+            SELECT uuid
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()[0]
+
+        return render_template("profile/reveal_rk.html", uuid=UUID)
+    else:
+        session["reveal_rk_info"] = False
+        return redirect("/recovery_key")

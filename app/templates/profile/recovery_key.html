@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Recovery key
+{% endblock %}
+
+{% block header %}
+<article>
+  <header>
+    <h1>Recovery key</h1>
+    <!-- This code retrieves information through the flash module of flask -->
+    {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
+    {% if messages %}
+    <ul class="flashes container">
+      {% for message in messages %}
+      <li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+  </header>
+
+  {% if is_totp_set == True %}
+  <div class="container">
+    <h2>Show recovery key</h2>
+    <p>To show your recovery key, please enter your two-factor authentication 6-digit code below and click on the
+      <i><strong>Show Recovery key</strong></i> button:
+    </p>
+  </div>
+  <div class="container">
+    <p>
+    <form action="/recovery_key" method="post" class="container">
+      <label for="rk_totp">
+        <input type="text" id="rk_totp" name="rk_totp" placeholder="6-digit code" autocomplete="off">
+      </label>
+      <button type="submit" id="show_recovery_key" name="show_recovery_key"><strong>Show Recovery key</strong></button>
+    </form>
+  </div>
+
+  <div class="container">
+    <hr>
+    <h2>Generate a new recovery key</h2>
+
+    <form action="/recovery_key" method="post" class="container">
+      <p>
+        If you suspect that your recovery key has been compromised, you can
+        generate a new one immediately by typing <strong><i>"generate a new
+        recovery key"</strong></i> and confirming your two-factor authentication
+        6-digit code in the form below, then click on the <strong><i>Generate
+        Recovery key</strong></i> button.
+      </p>
+
+      <label for="rk_generate">
+        <input type="text" id="rk_generate" name="rk_generate"
+          placeholder="Fill out this text field and submit it to generate a new recovery key" autocomplete="off">
+      </label>
+      <label for="rk_generate_totp">
+        <input type="text" id="rk_generate_totp" name="rk_generate_totp" placeholder="6-digit code"
+          autocomplete="off">
+      </label>
+
+      <p>
+        <i>
+          Please note that generating a new recovery key will <b>replace</b> the previous one.
+        </i>
+      </p>
+      <button type="submit" id="generate_new_recovery_key" name="generate_new_recovery_key"><strong>Generate Recovery key</strong></button>
+    </form>
+  </div>
+  {% endif %}
+
+  {% if is_totp_set == False %}
+  <div class="container">
+    <h2>Show Recovery key</h2>
+    <p>
+      <strong><i>
+          In order to show your account Recovery key, you must enable two-factor
+          authentication.
+        </i></strong>
+    </p>
+    <hr>
+    <br>
+  </div>
+  <div class="container">
+    <a href="/2FA" role="button" class="container contrast"><strong>Enable two-factor authentication</strong></a>
+  </div>
+  {% endif %}
+
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="/profile" class="outline">Back to profile</a></li>
+      </ul>
+    </nav>
+  </footer>
+</article>
+{% endblock %}

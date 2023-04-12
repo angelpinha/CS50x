@@ -209,9 +209,9 @@ def confirm_2fa():
             else:
                 return redirect(url_for("auth.confirm_2fa"))
 
-        current_code = int(pyotp.TOTP(totp_key).now())
+        verify_otp = pyotp.TOTP(totp_key).verify(user_input_code)
 
-        if user_input_code == current_code:
+        if verify_otp is True:
             session.clear()
             session["user_id"] = rows["id"]
             if next_url:
