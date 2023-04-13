@@ -9,6 +9,7 @@ from flask import (
     g,
 )
 
+from werkzeug.security import check_password_hash
 import uuid
 import pyotp
 import qrcode
@@ -173,7 +174,7 @@ def two_factor_authentication():
         if rows["totp_key"] is None:
             is_totp_set = False
 
-            if "qr_encoded" not in session:
+            if session.get("qr_encoded") is None:
                 create_totp_qrcode()
                 qr_encoded = session["qr_encoded"]
                 qr_key = session["qr_key"]
@@ -335,3 +336,96 @@ def reveal_rk():
     else:
         session["reveal_rk_info"] = False
         return redirect("/recovery_key")
+
+
+@user_profile.route("/deactivate_2fa", methods=["GET", "POST"])
+@login_required
+def deactivate_2fa():
+    if request.method == "POST": 
+        # Counter for missing credentials
+        missing_credentials = 0
+        fields = {
+            "password": "Password",
+            "totp": "2FA 6-Digit code",
+        }
+
+        # Makes sure every input has been filled
+        for input in fields:
+            if not request.form.get(f"{input}"):
+                flash(f"Must provide {fields[input]}", "error")
+                missing_credentials += 1
+                continue
+
+        if missing_credentials != 0:
+            return redirect("/deactivate_2fa")
+
+        try:
+            totp = int(request.form.get("totp"))
+        except ValueError:
+            flash("Must provide a valid 6-digit 2FA code", "error")
+            return redirect("/deactivate_2fa")
+
+        db = get_db()
+        rows = db.execute(
+            """
+            SELECT totp_key, password_hash
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()
+
+        totp_key = rows["totp_key"]
+        pwhash = rows["password_hash"]
+
+        verify_otp = pyotp.TOTP(totp_key).verify(totp)
+
+        checker = check_password_hash(
+            pwhash, request.form.get("password")
+        )
+
+        if verify_otp and checker:
+            UUID = str(uuid.uuid4()).upper()
+            db.execute(
+                """
+                UPDATE users
+                SET totp_key = NULL, uuid = (?)
+                WHERE id = (?)
+                """,
+                (
+                    UUID,
+                    g.user[0],
+                ),
+            )
+            db.commit()
+
+            flash("Two-factor authentication has been deactivated!", "success")
+            flash("ALERT: Recovery key for your account has been replaced!", "success")
+            return redirect("/2FA")
+
+        else:
+            flash("Invalid credentials", "error")
+            return redirect("/deactivate_2fa")
+
+    else:
+        db = get_db()
+        TOTP = db.execute(
+            """
+            SELECT totp_key
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()[0]
+
+        if TOTP is None:
+            is_totp_set = False
+        else:
+            is_totp_set = True
+
+        if is_totp_set:
+            return render_template("profile/deactivate_2fa.html")
+
+        # Handles case if totp is not set for account
+        else:
+            return redirect("/2FA")
