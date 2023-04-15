@@ -9,6 +9,7 @@ def create_app():
     app.config["SQLite_Database_URI"] = "data.db"
 
     from .views.auth import auth
+    from .views.profile import user_profile
     from .views.management import management
 
     @app.route("/")
@@ -21,6 +22,7 @@ def create_app():
         return render_template("about.html")
 
     app.register_blueprint(auth)
+    app.register_blueprint(user_profile)
     app.register_blueprint(management)
 
     # Initialize database after app initialitation

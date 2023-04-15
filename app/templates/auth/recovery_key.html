@@ -43,7 +43,7 @@ Recovery key
         <a href="#close" aria-label="Close" class="close" data-target="rk_modal" onClick="toggleModal(event)"></a>
         <h3>Recovery key</h3>
       </header>
-
+      {% if advice == True %}
       <div class="container">
         <p class="mx-centered">
           <mark>
@@ -54,16 +54,37 @@ Recovery key
           </mark>
         </p>
       </div>
-
+      {% endif %}
+      {% if advice == False %}
+      <div class="container">
+        <p class="mx-centered">
+          <mark>
+            <strong>
+              Please, enable two-factor authentication in order to show your account recovery key.
+            </strong>
+          </mark>
+        </p>
+      </div>
+      {% endif %}
       <br>
 
       <input type="text" style="font-family:monospace; font-weight: bold; text-align:center;" value="{{ uuid }}"
         readonly>
+      {% if advice == False %}
+      <a href="/2FA" class="container" role="button">Enable two-factor authentication</a>
+      {% endif %}
 
       <footer>
+        {% if advice == False %}
+        <a href="#confirm" role="button" class="outline" data-target="rk_modal" onClick="toggleModal(event)">
+          <strong>Understood</strong>
+        </a>
+        {% endif %}
+        {% if advice == True %}
         <a href="#confirm" role="button" data-target="rk_modal" onClick="toggleModal(event)">
           <strong>Understood</strong>
         </a>
+        {% endif %}
       </footer>
     </article>
   </dialog>
