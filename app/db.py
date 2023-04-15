@@ -31,16 +31,24 @@ def close_db(e=None):
 # Get schema from sql file to db
 def schema_db():
     db = get_db()
-
     with current_app.open_resource("schema.sql") as f:
         db.executescript(f.read().decode("utf8"))
 
 
-# TODO: Integrate schema creation inside run.py
+# Create database through CLI or run.py script
 @click.command("schema-db")
 def schema_db_command():
-    schema_db()
-    click.echo("Initialized the database.")
+    try:
+        schema_db()
+        click.echo("#########################################################")
+        click.echo("Database has been created!")
+        click.echo("#########################################################")
+    except sqlite3.OperationalError:
+        click.echo("#########################################################")
+        click.echo("Previous database already in system!")
+        click.echo("#########################################################")
+        click.echo("Opening existing database instead")
+        click.echo("#########################################################")
 
 
 def init_app(app):
