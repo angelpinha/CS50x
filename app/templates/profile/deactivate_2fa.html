@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Deactivate 2fa
+{% endblock %}
+
+{% block header %}
+<article>
+  <header>
+    <h1>Two factor authentication (2FA)</h1>
+    <!-- This code retrieves information through the flash module of flask -->
+    {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
+    {% if messages %}
+    <ul class="flashes container">
+      {% for message in messages %}
+      <li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+  </header>
+
+  <div class="container">
+    <h2>Deactivate 2FA</h2>
+    <hr>
+  </div>
+
+  <div class="container">
+    <p>
+      To deactivate two-factor authentication for your account, please fill the
+      form below with your account password and your two-factor authentication 6-digit
+      code then submit the form by clicking on the <b><i>Deactivate</b></i> button.
+    </p>
+  </div>
+
+  <div class="container">
+    <p>
+    <form action="/deactivate_2fa" method="post" class="container">
+      <label for="password">
+        <input type="password" id="password" name="password" placeholder="Password" autocomplete="off">
+      </label>
+      <label for="totp">
+        <input type="text" id="totp" name="totp" placeholder="6-digit code" autocomplete="off">
+      </label>
+
+      <p>
+        <i>
+          Note that deactivating 2FA will <b>replace</b> the recovery key for
+          your account, making it impossible to recover your account with your previous
+          recovery key.
+        </i>
+      </p>
+
+      <button type="submit" id="deactivate_2fa" name="deactivate_2fa"><strong>Deactivate</strong></button>
+    </form>
+  </div>
+
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="/profile" class="outline">Back to profile</a></li>
+      </ul>
+    </nav>
+  </footer>
+</article>
+{% endblock %}
