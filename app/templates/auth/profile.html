@@ -13,12 +13,14 @@ Profile
     <div>Username</div>
     <input type="text" value="{{ username }}" readonly>
     <div class="grid">
-      <div>First name</div>
-      <div>Last name</div>
-    </div>
-    <div class="grid">
-      <input type="text" value="{{ first_name }}" readonly>
-      <input type="text" value="{{ last_name }}" readonly>
+      <label for="first_name">
+        First name
+        <input type="text" value="{{ first_name }}" readonly>
+      </label>
+      <label for="last_name">
+        Last name
+        <input type="text" value="{{ last_name }}" readonly>
+      </label>
     </div>
     <div>Role</div>
     <input type="text" value="{{ role }}" readonly>
