@@ -180,6 +180,7 @@ def login():
                 return redirect(next_url)
             return redirect(url_for("index"))
     else:
+        session.clear()
         return render_template("auth/login.html")
 
 
@@ -266,6 +267,7 @@ def profile():
         role=role,
     )
 
+
 @login_required
 def create_totp_qrcode():
     # Get username from database
@@ -318,7 +320,6 @@ def create_totp_qrcode():
 
     session["qr_encoded"] = qr_encoded
     session["qr_key"] = SECRET_KEY
-
     return
 
 
@@ -393,7 +394,8 @@ def two_factor_authentication():
             is_totp_set = True
             return render_template("auth/2fa.html", is_totp_set=is_totp_set)
 
-@auth.route("/RC", methods=["GET", "POST"])
+
+@auth.route("/recovery_key", methods=["GET", "POST"])
 @login_required
 def recovery_key():
     if request.method == "POST":
@@ -416,11 +418,11 @@ def recovery_key():
             db.commit()
             flash("New recovery key has been generated!", "success")
             flash("Please keep it in a safe place", "success")
-            return redirect("/RC")
+            return redirect("/recovery_key")
         else:
             flash("Could not generate a new recovery key!", "error")
             flash("Please fill out the form accordingly", "error")
-            return redirect("/RC")
+            return redirect("/recovery_key")
     else:
         db = get_db()
         UUID = db.execute(
@@ -429,13 +431,148 @@ def recovery_key():
             FROM users
             WHERE id = (?)
             """,
-            (
-                g.user[0],
-            ),
+            (g.user[0],),
         ).fetchone()[0]
-    return render_template("auth/rc.html", uuid=UUID)
+    return render_template("auth/recovery_key.html", uuid=UUID)
 
-@auth.route("/recover")
+
+@auth.route("/recover", methods=["GET", "POST"])
 def recover_account():
-    # TODO
-    return render_template("auth/recover.html")
+    if request.method == "POST":
+        missing_credentials = 0
+
+        fields = {
+            "username": "Username",
+            "recovery": "Recovery key",
+        }
+
+        for input in fields:
+            if not request.form.get(f"{input}"):
+                flash(f"Must provide {fields[input]}", "error")
+                missing_credentials += 1
+                continue
+
+        if missing_credentials != 0:
+            return redirect("/recover")
+
+        input_username = request.form.get("username")
+        input_recovery = request.form.get("recovery")
+
+        db = get_db()
+        try:
+            db_recovery = db.execute(
+                """
+                SELECT uuid
+                FROM users
+                WHERE username = (?)
+                """,
+                (input_username,),
+            ).fetchone()[0]
+        except TypeError:
+            flash("Username / Recovery key pair don't match!", "error")
+            flash("Try again with valid input", "error")
+            flash("E-R01", "error")
+            return redirect("/recover")
+
+        if input_recovery == db_recovery:
+            session.clear()
+            user_id = db.execute(
+                """
+                SELECT id
+                FROM users
+                WHERE username = (?)
+                """,
+                (input_username,),
+            ).fetchone()
+
+            session["recovery_id"] = user_id["id"]
+
+            return redirect("/set_password")
+        else:
+            flash("Username / Recovery key pair don't match!", "error")
+            flash("Try again with valid input", "error")
+            flash("E-R02", "error")
+            return redirect("/recover")
+
+        return redirect("/recover")
+    else:
+        return render_template("auth/recover.html")
+
+
+@auth.route("/set_password", methods=["GET", "POST"])
+def set_new_password():
+    if request.method == "POST":
+        missing_credentials = 0
+
+        fields = {
+            "password": "Password",
+            "password_check": "Password confirmation",
+        }
+
+        for input in fields:
+            if not request.form.get(f"{input}"):
+                flash(f"Must provide {fields[input]}", "error")
+                missing_credentials += 1
+                continue
+
+        if missing_credentials != 0:
+            return redirect("/set_password")
+
+        pwhash = generate_password_hash(request.form.get("password"))
+        checker = check_password_hash(pwhash, request.form.get("password_check"))
+
+        # Checker if either True or False
+        if checker:
+            recovery_id = session["recovery_id"]
+            session.clear()
+
+            UUID = str(uuid.uuid4()).upper()
+            db = get_db()
+            totp_key = db.execute(
+                """
+                SELECT totp_key
+                FROM users
+                WHERE id = (?)
+                """,
+                (recovery_id,),
+            ).fetchone()[0]
+
+            db.execute(
+                """
+                UPDATE users
+                SET password_hash = (?), uuid = (?), totp_key = NULL
+                WHERE id = (?)
+                """,
+                (
+                    pwhash,
+                    UUID,
+                    recovery_id,
+                ),
+            )
+            db.commit()
+
+            if totp_key is None:
+                flash("New recovery key has been generated!", "success")
+                flash("ALERT: Make sure to backup your new recovery key!", "success")
+            else:
+                flash("New recovery key has been generated!", "success")
+                flash("ALERT: Make sure to backup your new recovery key!", "success")
+                flash(
+                    "ALERT: Two factor authentication has been deactivated!", "success"
+                )
+
+            session["user_id"] = recovery_id
+            return redirect("/recovery_key")
+
+        else:
+            flash("Password and confirmation must be equal!", "error")
+            return redirect("/set_password")
+
+    else:
+        try:
+            if session["recovery_id"]:
+                return render_template("auth/set_password.html")
+        except KeyError:
+            session.clear()
+            flash("Please provide proper credentials", "error")
+            return redirect("/recover")
