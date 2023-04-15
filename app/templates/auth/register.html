@@ -17,11 +17,11 @@ Register
     {% endif %}
     {% endwith %}
   </header>
-  <form action="/register" method="post" class="container">
+  <form action="/register" method="post" class="container" autocomplete="off">
     <div class="container">
       <div class="grid">
         <label for="first_name">
-          <input type="text" id="first_name" name="first_name" placeholder="First name">
+          <input type="text" id="first_name" name="first_name" placeholder="First name" autofocus>
         </label>
         <label for="last_name">
           <input type="text" id="last_name" name="last_name" placeholder="Last name">

@@ -1,11 +1,11 @@
 {% extends "auth/auth_layout.html" %}
 {% block title %}
-Login
+2FA
 {% endblock %}
 {% block header %}
 <article>
   <header>
-    <h1>Login</h1>
+    <h1>Two factor authentication (2FA)</h1>
     <!-- This code retrieves information through the flash module of flask -->
     {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
     {% if messages %}
@@ -17,26 +17,20 @@ Login
     {% endif %}
     {% endwith %}
   </header>
-  <form action="/login" method="post" class="container" autocomplete="off">
+  <form action="/confirm_2fa" method="post" class="container" autocomplete="off">
     <div class="grid">
-      <label for="username">
-        <input type="text" id="username" name="username" placeholder="Username" autofocus>
-      </label>
-      <label for="password">
-        <input type="password" id="password" name="password" placeholder="Password">
+      <label for="totp">
+        <input type="text" id="totp" name="totp" placeholder="6-digit code" autofocus>
       </label>
     </div>
-    <button type="submit">Log In</button>
+    <button type="submit">Submit</button>
     <!-- Stores the data of next url in case of previously requested route -->
     <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
   </form>
   <footer>
     <nav>
       <ul>
-        <li><a href="/register" class="outline">Create an account</a></li>
-      </ul>
-      <ul>
-        <li><a href="/recover" class="secondary" data-tooltip="Feature in progress :)">Forgot your password?</a></li>
+        <li><a href="/login" class="outline">Go back to login</a></li>
       </ul>
     </nav>
   </footer>

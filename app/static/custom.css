@@ -35,3 +35,9 @@
   --switch-color: var(--primary-inverse);
   --switch-checked-background-color: var(--primary);
 }
+
+.mx-centered {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}

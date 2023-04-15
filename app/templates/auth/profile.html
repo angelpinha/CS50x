@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Profile
+{% endblock %}
+
+{% block header %}
+<article>
+  <header>
+    <h1>Profile</h1>
+  </header>
+  <div class="container">
+    <div>Username</div>
+    <input type="text" value="{{ username }}" readonly>
+    <div class="grid">
+      <div>First name</div>
+      <div>Last name</div>
+    </div>
+    <div class="grid">
+      <input type="text" value="{{ first_name }}" readonly>
+      <input type="text" value="{{ last_name }}" readonly>
+    </div>
+    <div>Role</div>
+    <input type="text" value="{{ role }}" readonly>
+  </div>
+
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="/2FA" class="outline">Enable two-factor authentication</a></li>
+      </ul>
+      <ul>
+        <li><a href="/profile" class="secondary" data-tooltip="Feature in progress :)">Change username</a></li>
+        <li><a href="/profile" class="secondary" data-tooltip="Feature in progress :)">Change password</a></li>
+        <li><a href="/profile" class="secondary" data-tooltip="Feature in progress :)">Recovery key</a></li>
+      </ul>
+    </nav>
+  </footer>
+</article>
+{% endblock %}
