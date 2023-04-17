@@ -1,0 +1,61 @@
+{% extends "management/management_layout.html" %}
+
+{% block title %}
+Products
+{% endblock %}
+{% block header %}
+<article>
+  <header>
+    <h1>Products</h1>
+  </header>
+
+  <div class="container">
+
+    <div class="grid">
+
+      <label for="search-string">
+
+        <form action="/products" method="post">
+          <input autocomplete="off" name="item" type="search" id="search" placeholder="Search">
+          <input id="submit" type="submit">
+        </form>
+
+        <details open>
+          <summary aria-haspopup="listbox">Results</summary>
+          <ul id="options" role="listbox"></ul>
+        </details>
+
+      </label>
+
+      <script src="{{ url_for('static', filename= 'async_script.js') }}"></script>
+
+      <label for="filter">
+        <select id="condition" required>
+          <option value="Empty" selected>Filter</option>
+          <option>Name</option>
+          <option>Id</option>
+        </select>
+      </label>
+
+    </div>
+
+  </div>
+</article>
+{% endblock %}
+
+{% block main %}
+
+<main class="container">
+  <table role="grid">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Name</th>
+        <th>Value</th>
+        <th>Sold units</th>
+        <th>Profit</th>
+      </tr>
+    </thead>
+  </table>
+</main>
+{% endblock %}
