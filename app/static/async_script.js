@@ -18,12 +18,4 @@ input.addEventListener('input', async function () {
         };
       });
     });
-  //let result = await response.json();
-  //let html = '';
-  //for (let Name in result) {
-  //  let name = result[Name].name;
-  //  html += '<li><input name="items" type="radio">' + name + '</input></li>';
-  //}
-
-  //document.getElementById('options').innerHTML = html;
 });
