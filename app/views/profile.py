@@ -7,6 +7,7 @@ from flask import (
     redirect,
     session,
     g,
+    url_for,
 )
 
 from werkzeug.security import check_password_hash
@@ -32,6 +33,21 @@ def logged_in_user():
         )
 
 
+class Credentials:
+    def verify(self, fields):
+        # Counter for missing credentials
+        missing_credentials = 0
+        # Iterate over the credentials
+        for input, label in fields.items():
+            if not request.form.get(f"{input}"):
+                flash(f"Must provide {fields[input]}", "error")
+                missing_credentials += 1
+                continue
+        if missing_credentials != 0:
+            return False
+        return True
+
+
 @user_profile.route("/profile")
 @login_required
 def profile():
@@ -49,11 +65,6 @@ def profile():
     first_name = rows["first_name"]
     last_name = rows["last_name"]
     role = rows["role"]
-
-    # Redirects to a previously requested url if exists
-    next_url = request.form.get("next")
-    if next_url:
-        return redirect(next_url)
 
     return render_template(
         "profile/profile.html",
@@ -129,7 +140,7 @@ def two_factor_authentication():
             user_input_code = int(request.form.get("totp"))
         except ValueError:
             flash("Must provide a valid 6-digit 2FA code", "error")
-            return redirect("/2FA")
+            return redirect(url_for("user_profile.two_factor_authentication"))
 
         verify_otp = pyotp.TOTP(qr_key).verify(user_input_code)
 
@@ -153,12 +164,11 @@ def two_factor_authentication():
             session.pop("qr_key", None)
 
             flash("Two factor authentication has been set", "success")
-            return redirect("/2FA")
-
+            return redirect(url_for("user_profile.two_factor_authentication"))
+        # verify_otp is False
         else:
             flash("Invalid 6-digit code, try again", "error")
-            return redirect("/2FA")
-
+            return redirect(url_for("user_profile.two_factor_authentication"))
     else:
         # Initialize the database and get totp_key from database
         db = get_db()
@@ -195,27 +205,19 @@ def two_factor_authentication():
 @login_required
 def recovery_key():
     if "show_recovery_key" in request.form:
-        # Counter for missing credentials
-        missing_credentials = 0
         fields = {
             "rk_totp": "2FA 6-Digit code",
         }
 
-        # Makes sure every input has been filled
-        for input in fields:
-            if not request.form.get(f"{input}"):
-                flash(f"Must provide {fields[input]}", "error")
-                missing_credentials += 1
-                continue
-
-        if missing_credentials != 0:
-            return redirect("/recovery_key")
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("user_profile.recovery_key"))
 
         try:
             rk_totp = int(request.form.get("rk_totp"))
         except ValueError:
             flash("Must provide a valid 6-digit 2FA code", "error")
-            return redirect("/recovery_key")
+            return redirect(url_for("user_profile.recovery_key"))
 
         db = get_db()
         totp_key = db.execute(
@@ -231,35 +233,28 @@ def recovery_key():
 
         if verify_otp is True:
             session["reveal_rk_info"] = True
-            return redirect("/reveal_rk")
+            return redirect(url_for("user_profile.reveal_rk"))
 
         else:
             flash("Invalid 2FA code", "error")
-            return redirect("/recovery_key")
+            return redirect(url_for("user_profile.recovery_key"))
 
     if "generate_new_recovery_key" in request.form:
         # Counter for missing credentials
-        missing_credentials = 0
         fields = {
             "rk_generate": "Text confirmation on form",
             "rk_generate_totp": "2FA 6-Digit code",
         }
 
-        # Makes sure every input has been filled
-        for input in fields:
-            if not request.form.get(f"{input}"):
-                flash(f"Must provide {fields[input]}", "error")
-                missing_credentials += 1
-                continue
-
-        if missing_credentials != 0:
-            return redirect("/recovery_key")
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("user_profile.recovery_key"))
 
         try:
             user_totp = int(request.form.get("rk_generate_totp"))
         except ValueError:
             flash("Must provide a valid 6-digit 2FA code", "error")
-            return redirect("/recovery_key")
+            return redirect(url_for("user_profile.recovery_key"))
 
         user_confirmation = request.form.get("rk_generate").lower()
         confirmation_message = "generate a new recovery key"
@@ -292,11 +287,11 @@ def recovery_key():
             )
             db.commit()
             flash("New recovery key has been generated!", "success")
-            return redirect("/recovery_key")
+            return redirect(url_for("user_profile.recovery_key"))
         else:
             flash("Could not generate a new recovery key!", "error")
             flash("Please fill out the form accordingly", "error")
-            return redirect("/recovery_key")
+            return redirect(url_for("user_profile.recovery_key"))
     else:
         db = get_db()
         TOTP = db.execute(
@@ -320,8 +315,7 @@ def recovery_key():
 @login_required
 def reveal_rk():
     if session.get("reveal_rk_info") is True:
-        session["reveal_rk_info"] = False
-
+        session.pop("reveal_rk_info", None)
         db = get_db()
         UUID = db.execute(
             """
@@ -334,30 +328,22 @@ def reveal_rk():
 
         return render_template("profile/reveal_rk.html", uuid=UUID)
     else:
-        session["reveal_rk_info"] = False
-        return redirect("/recovery_key")
+        session.pop("reveal_rk_info", None)
+        return redirect(url_for("user_profile.recovery_key"))
 
 
 @user_profile.route("/deactivate_2fa", methods=["GET", "POST"])
 @login_required
 def deactivate_2fa():
-    if request.method == "POST": 
-        # Counter for missing credentials
-        missing_credentials = 0
+    if request.method == "POST":
         fields = {
             "password": "Password",
             "totp": "2FA 6-Digit code",
         }
 
-        # Makes sure every input has been filled
-        for input in fields:
-            if not request.form.get(f"{input}"):
-                flash(f"Must provide {fields[input]}", "error")
-                missing_credentials += 1
-                continue
-
-        if missing_credentials != 0:
-            return redirect("/deactivate_2fa")
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("user_profile.deactivate_2fa"))
 
         try:
             totp = int(request.form.get("totp"))
@@ -380,9 +366,7 @@ def deactivate_2fa():
 
         verify_otp = pyotp.TOTP(totp_key).verify(totp)
 
-        checker = check_password_hash(
-            pwhash, request.form.get("password")
-        )
+        checker = check_password_hash(pwhash, request.form.get("password"))
 
         if verify_otp and checker:
             UUID = str(uuid.uuid4()).upper()
@@ -401,11 +385,11 @@ def deactivate_2fa():
 
             flash("Two-factor authentication has been deactivated!", "success")
             flash("ALERT: Recovery key for your account has been replaced!", "success")
-            return redirect("/2FA")
-
+            return redirect(url_for("user_profile.two_factor_authentication"))
+        # Not verify_otp and/or not checker
         else:
             flash("Invalid credentials", "error")
-            return redirect("/deactivate_2fa")
+            return redirect(url_for("user_profile.deactivate_2fa"))
 
     else:
         db = get_db()
@@ -425,7 +409,6 @@ def deactivate_2fa():
 
         if is_totp_set:
             return render_template("profile/deactivate_2fa.html")
-
         # Handles case if totp is not set for account
         else:
-            return redirect("/2FA")
+            return redirect(url_for("user_profile.two_factor_authentication"))
