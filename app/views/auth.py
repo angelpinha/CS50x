@@ -7,6 +7,7 @@ from flask import (
     session,
     url_for,
     g,
+    get_flashed_messages,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 import uuid
@@ -29,11 +30,33 @@ def logged_in_user():
         )
 
 
+class Credentials:
+    def verify(self, fields):
+        # Counter for missing credentials
+        missing_credentials = 0
+        # Iterate over the credentials
+        for input, label in fields.items():
+            if not request.form.get(f"{input}"):
+                flash(f"Must provide {fields[input]}", "error")
+                missing_credentials += 1
+                continue
+        if missing_credentials != 0:
+            return False
+        return True
+
+
+class FlashMessages:
+    def __init__(self):
+        messages = get_flashed_messages(with_categories=True)
+        if messages:
+            for message in messages:
+                flash(message)
+        return
+
+
 @auth.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        # Counter for missing credentials
-        missing_credentials = 0
         fields = {
             "first_name": "first name",
             "last_name": "last name",
@@ -42,15 +65,9 @@ def register():
             "password_check": "password confirmation",
         }
 
-        # Makes sure every input has been filled
-        for input in fields:
-            if not request.form.get(f"{input}"):
-                flash(f"Must provide {fields[input]}", "error")
-                missing_credentials += 1
-                continue
-
-        if missing_credentials != 0:
-            return redirect("/register")
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("auth.register"))
 
         db = get_db()
         credentials = {}
@@ -68,7 +85,7 @@ def register():
                     credentials[key] = pwhash
                 else:
                     flash("Password and confirmation must be equal!", "error")
-                    return redirect("/register")
+                    return redirect(url_for("auth.register"))
 
             else:
                 credentials[key] = request.form.get(f"{key}")
@@ -96,41 +113,32 @@ def register():
             db.commit()
         except db.IntegrityError:
             flash("Username is already registered.", "error")
-            return redirect("/register")
+            return redirect(url_for("auth.register"))
 
-        success = flash("User Registered!", "success")
-        wait = flash("Wait until an admin assigns your role.", "success")
-        return render_template("auth/login.html", success=success, wait=wait)
-
-    if request.method == "GET":
+        flash("User Registered!", "success")
+        return redirect(url_for("auth.login"))
+    else:
+        FlashMessages()
+        session.clear()
         return render_template("auth/register.html")
 
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        missing_credentials = 0
         fields = {
             "username": "Username",
             "password": "Password",
         }
 
-        next_url = request.form.get("next")
-
-        for input in fields:
-            if not request.form.get(f"{input}"):
-                flash(f"Must provide {fields[input]}", "error")
-                missing_credentials += 1
-                continue
-
-        if missing_credentials != 0:
-            return redirect("/login")
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("auth.login"))
 
         username = request.form.get("username")
         password = request.form.get("password")
 
         db = get_db()
-
         rows = db.execute(
             """
             SELECT id, password_hash, totp_key
@@ -143,40 +151,28 @@ def login():
         # Checks if username is registered in database
         if rows is None:
             flash("Username not registered", "error")
-            next_url = request.form.get("next")
-            if next_url:
-                return redirect(next_url)
-            return render_template("auth/login.html")
+            return redirect(url_for("auth.login"))
 
         auth = check_password_hash(rows["password_hash"], password)
 
         # Checks if password is valid
         if auth is not True:
             flash("Incorrect password", "error")
-            next_url = request.form.get("next")
-            if next_url:
-                return redirect(next_url)
-            return render_template("auth/login.html")
+            return redirect(url_for("auth.login"))
 
         totp_key = rows["totp_key"]
 
         if totp_key is not None:
             session.clear()
             session["user_id_pending"] = rows["id"]
-            next_url = request.form.get("next")
-            if next_url:
-                return redirect(url_for("auth.confirm_2fa", next=next_url))
-            else:
-                return redirect(url_for("auth.confirm_2fa"))
+            return redirect(url_for("auth.confirm_2fa"))
 
         else:
             session.clear()
             session["user_id"] = rows["id"]
-            # Redirects to previously requested URL if exists
-            if next_url:
-                return redirect(next_url)
             return redirect(url_for("index"))
     else:
+        FlashMessages()
         session.clear()
         return render_template("auth/login.html")
 
@@ -185,7 +181,6 @@ def login():
 @confirm_2fa_pending
 def confirm_2fa():
     if request.method == "POST":
-        next_url = request.form.get("next")
         user_id = session["user_id_pending"]
 
         db = get_db()
@@ -204,19 +199,13 @@ def confirm_2fa():
             user_input_code = int(request.form.get("totp"))
         except ValueError:
             flash("Must provide a valid 6-digit 2FA code", "error")
-            if next_url:
-                return redirect(url_for("auth.confirm_2fa", next=next_url))
-            else:
-                return redirect(url_for("auth.confirm_2fa"))
+            return redirect(url_for("auth.confirm_2fa"))
 
         verify_otp = pyotp.TOTP(totp_key).verify(user_input_code)
 
         if verify_otp is True:
             session.clear()
             session["user_id"] = rows["id"]
-            if next_url:
-                return redirect(next_url)
-            # Redirects to previously requested URL if exists
             return redirect(url_for("index"))
         else:
             # Count for wrong attempts
@@ -229,8 +218,6 @@ def confirm_2fa():
 
             if session["TRIES"] >= 2:
                 return redirect(url_for("auth.login"))
-            if next_url:
-                return redirect(url_for("auth.confirm_2fa", next=next_url))
             else:
                 return redirect(url_for("auth.confirm_2fa"))
     else:
@@ -246,21 +233,14 @@ def logout():
 @auth.route("/recover", methods=["GET", "POST"])
 def recover_account():
     if request.method == "POST":
-        missing_credentials = 0
-
         fields = {
             "username": "Username",
             "recovery": "Recovery key",
         }
 
-        for input in fields:
-            if not request.form.get(f"{input}"):
-                flash(f"Must provide {fields[input]}", "error")
-                missing_credentials += 1
-                continue
-
-        if missing_credentials != 0:
-            return redirect("/recover")
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("auth.recover_account"))
 
         input_username = request.form.get("username")
         input_recovery = request.form.get("recovery")
@@ -278,8 +258,7 @@ def recover_account():
         except TypeError:
             flash("Username / Recovery key pair don't match!", "error")
             flash("Try again with valid input", "error")
-            flash("E-R01", "error")
-            return redirect("/recover")
+            return redirect(url_for("auth.recover_account"))
 
         if input_recovery == db_recovery:
             session.clear()
@@ -293,15 +272,11 @@ def recover_account():
             ).fetchone()
 
             session["recovery_id"] = user_id["id"]
-
-            return redirect("/set_password")
+            return redirect(url_for("auth.set_new_password"))
         else:
             flash("Username / Recovery key pair don't match!", "error")
             flash("Try again with valid input", "error")
-            flash("E-R02", "error")
-            return redirect("/recover")
-
-        return redirect("/recover")
+            return redirect(url_for("auth.recover_account"))
     else:
         return render_template("auth/recover.html")
 
@@ -309,21 +284,14 @@ def recover_account():
 @auth.route("/set_password", methods=["GET", "POST"])
 def set_new_password():
     if request.method == "POST":
-        missing_credentials = 0
-
         fields = {
             "password": "Password",
             "password_check": "Password confirmation",
         }
 
-        for input in fields:
-            if not request.form.get(f"{input}"):
-                flash(f"Must provide {fields[input]}", "error")
-                missing_credentials += 1
-                continue
-
-        if missing_credentials != 0:
-            return redirect("/set_password")
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("auth.set_new_password"))
 
         pwhash = generate_password_hash(request.form.get("password"))
         checker = check_password_hash(pwhash, request.form.get("password_check"))
@@ -369,12 +337,11 @@ def set_new_password():
                 )
 
             session["user_id"] = recovery_id
-            return redirect("/recovery_key")
-
+            return redirect(url_for("user_profile.recovery_key"))
+        # If not Checker
         else:
             flash("Password and confirmation must be equal!", "error")
-            return redirect("/set_password")
-
+            return redirect(url_for("auth.set_new_password"))
     else:
         try:
             if session["recovery_id"]:
@@ -382,4 +349,4 @@ def set_new_password():
         except KeyError:
             session.clear()
             flash("Please provide proper credentials", "error")
-            return redirect("/recover")
+            return redirect(url_for("auth.recover_account"))
