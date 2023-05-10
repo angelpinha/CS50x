@@ -10,7 +10,7 @@ from flask import (
     url_for,
 )
 
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 import uuid
 import pyotp
 import qrcode
@@ -412,3 +412,142 @@ def deactivate_2fa():
         # Handles case if totp is not set for account
         else:
             return redirect(url_for("user_profile.two_factor_authentication"))
+
+
+@user_profile.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "POST":
+        fields = {
+            "password": "Current password",
+            "new_password": "New password",
+            "new_password_check": "New password confirmation",
+        }
+
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("user_profile.change_password"))
+
+        db = get_db()
+        rows = db.execute(
+            """
+            SELECT password_hash
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()
+
+        pwhash = rows["password_hash"]
+
+        current_password = request.form.get("password")
+        checker = check_password_hash(pwhash, current_password)
+
+        # Validates current password with db password_hash
+        if checker is not True:
+            flash("Incorrect current password", "error")
+            return redirect(url_for("user_profile.change_password"))
+
+        new_password = request.form.get("new_password")
+        new_password_check = request.form.get("new_password_check")
+
+        # Validates new password and confirmation
+        if new_password != new_password_check:
+            flash("New Password and Confirmation must be equal!", "error")
+            return redirect(url_for("user_profile.change_password"))
+
+        # Validates provided password
+        if current_password == new_password:
+            flash("New Password must be different to Current Password!", "error")
+            return redirect(url_for("user_profile.change_password"))
+
+        # Updates password_hash for active user
+        NEW_PWHASH = generate_password_hash(new_password)
+        db.execute(
+            """
+            UPDATE users
+            SET password_hash = (?)
+            WHERE id = (?)
+            """,
+            (
+                NEW_PWHASH,
+                g.user[0],
+            ),
+        )
+        db.commit()
+
+        # Success!
+        flash("Password has been changed!", "success")
+        return redirect(url_for("user_profile.profile"))
+
+    else:
+        return render_template("profile/change_password.html")
+
+
+@user_profile.route("/change_username", methods=["GET", "POST"])
+@login_required
+def change_username():
+    if request.method == "POST":
+        fields = {
+            "new_username": "New username",
+            "password": "Current password",
+        }
+
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("user_profile.change_username"))
+
+        db = get_db()
+        rows = db.execute(
+            """
+            SELECT password_hash
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()
+
+        pwhash = rows["password_hash"]
+        current_password = request.form.get("password")
+        checker = check_password_hash(pwhash, current_password)
+
+        # Validates provided password
+        if checker is not True:
+            flash("Incorrect password", "error")
+            return redirect(url_for("user_profile.change_username"))
+
+        NEW_USERNAME = request.form.get("new_username")
+        # Updates username
+        try:
+            db.execute(
+                """
+                UPDATE users
+                SET username = (?)
+                WHERE id = (?)
+                """,
+                (
+                    NEW_USERNAME,
+                    g.user[0],
+                ),
+            )
+            db.commit()
+        except db.IntegrityError:
+            flash("Username has already been taken, try again!", "error")
+            return redirect(url_for("user_profile.change_username"))
+
+        # Success!
+        flash(f"Username has been changed to {NEW_USERNAME}!", "success")
+        return redirect(url_for("user_profile.profile"))
+    else:
+        db = get_db()
+        rows = db.execute(
+            """
+            SELECT username
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()
+        username = rows["username"]
+
+        return render_template("profile/change_username.html", username=username)

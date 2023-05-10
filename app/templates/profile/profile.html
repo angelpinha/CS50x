@@ -8,7 +8,18 @@ Profile
 <article>
   <header>
     <h1>Profile</h1>
+    <!-- This code retrieves information through the flash module of flask -->
+    {% with messages = get_flashed_messages(category_filter=["success", "error"]) %}
+    {% if messages %}
+    <ul class="flashes container">
+      {% for message in messages %}
+      <li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
   </header>
+
   <div class="container">
     <div>Username</div>
     <input type="text" value="{{ username }}" readonly>
@@ -32,9 +43,9 @@ Profile
         <li><a href="/2FA" class="outline">Enable two-factor authentication</a></li>
       </ul>
       <ul>
-        <li><a href="/profile" class="secondary" data-tooltip="Feature in progress :)">Change username</a></li>
-        <li><a href="/profile" class="secondary" data-tooltip="Feature in progress :)">Change password</a></li>
-        <li><a href="/recovery_key" class="secondary">Recovery key</a></li>
+        <li><a href="/change_username" class="secondary">Change username</a></li>
+        <li><a href="/change_password" class="secondary">Change password</a></li>
+        <li><a href="/recovery_key" class="secondary">Recovery Key</a></li>
       </ul>
     </nav>
   </footer>
