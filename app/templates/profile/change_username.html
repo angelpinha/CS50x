@@ -20,6 +20,7 @@ Change Username
     {% endwith %}
   </header>
 
+  {% if is_totp_set == True %}
   <div class="container">
     <div>Current username</div>
     <input type="text" value="{{ username }}" readonly>
@@ -31,11 +32,33 @@ Change Username
       <input type="text" id="new_username" name="new_username" placeholder="New username">
     </label>
     <label for="password">
-    <div>Password</div>
+      <div>Password</div>
       <input type="password" id="password" name="password" placeholder="Password">
+    </label>
+    <label for="totp">
+      <div>TOTP</div>
+      <input type="text" id="totp" name="totp" placeholder="6-digit code" autocomplete="off">
     </label>
     <button type="submit">Change username</button>
   </form>
+  {% endif %}
+
+  {% if is_totp_set == False %}
+  <div class="container">
+    <h2>Change Username</h2>
+    <p>
+      <strong><i>
+          In order to change your account username, you must enable two-factor
+          authentication.
+        </i></strong>
+    </p>
+    <hr>
+    <br>
+  </div>
+  <div class="container">
+    <a href="/2FA" role="button" class="container contrast"><strong>Enable two-factor authentication</strong></a>
+  </div>
+  {% endif %}
 
   <footer>
     <nav>
@@ -45,4 +68,5 @@ Change Username
     </nav>
   </footer>
 </article>
+
 {% endblock %}
