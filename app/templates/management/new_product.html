@@ -1,0 +1,52 @@
+{% extends "management/management_layout.html" %}
+
+{% block title %}
+New Product
+{% endblock %}
+{% block header %}
+<article>
+  <header>
+    <h1>New Product</h1>
+  </header>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <ul class="flashes container">
+    {% for message in messages %}
+    <li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+</article>
+<div class="container">
+  <div class="grid">
+    <label for="name">
+      <input autocomplete="off" id="name" placeholder="Product Name" type="text">
+    </label>
+    <label for="Category">
+      <select id="condition">
+        <option value="" selected>Category</option>
+        <option>Clothes</option>
+        <option>Footwear</option>
+      </select>
+    </label>
+    <label for="sell_value">
+      <input id="sell_value" placeholder="Sell Value" type="text">
+    </label>
+    <label>
+      <input autocomplete="off" id="n_components" placeholder="N° of Components" type="text">
+      <button id="reset" disabled type="button">Reset</button>
+    </label>
+    <nav class="breadcrumb">
+      <form action="/new_product" method="post">
+        <button id="save_product" type="submit">Save new product</button>
+      </form>
+    </nav>
+    </label>
+  </div>
+  <div id="component_status"></div>
+  <ul class="container-fluid" id="components" role="listbox"></ul>
+</div>
+
+<script src="{{ url_for('static', filename='new_product.js') }}"></script>
+{% endblock %}

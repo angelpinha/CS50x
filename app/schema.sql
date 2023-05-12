@@ -27,7 +27,7 @@ CREATE TABLE "suppliers" (
 
 CREATE TABLE "products" (
 	"id"	INTEGER NOT NULL UNIQUE,
-	"trade_name"	TEXT NOT NULL,
+	"description"	TEXT NOT NULL,
 	"sell_value"	INTEGER NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );

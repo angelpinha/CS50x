@@ -7,35 +7,38 @@ Products
 <article>
   <header>
     <h1>Products</h1>
+
   </header>
 
-  <div class="container">
+  <div class="container-fluid">
+    <nav aria-label="breadcrumb">
+      <details role="list">
+        <summary aria-haspopup="listbox">Settings</summary>
+        <ul role="listbox">
+          <li><a href="/new_product">New product</a></li>
+          <li><a>Modify a product</a></li>
+          <li><a>Change product status</a></li>
+        </ul>
+      </details>
+      <details role="list">
+        <summary aria-haspopup="listbox">Management Tools</summary>
+        <ul role="listbox">
+          <!--complete list and its general information: Priority, aggregate cost, sale value -->
+          <li><a>List of products</a></li>
+          <!--Rankings: select different filters based on top: units sold, point reviews, price-to-point ratio-->
+          <li><a>Rankings</a></li>
+          <li><a>Statistics</a></li>
+        </ul>
+      </details>
+    </nav>
 
     <div class="grid">
-
-      <label for="search-string">
-
-        <form action="/products" method="post">
-          <input autocomplete="off" name="item" type="search" id="search" placeholder="Search">
-          <input id="submit" type="submit">
-        </form>
-
-        <details open>
-          <summary aria-haspopup="listbox">Results</summary>
-          <ul id="options" role="listbox"></ul>
-        </details>
-
-      </label>
+      <form action="/products"></form>
+      {% if name %}
+      <h3>{{ name }}</h3>
+      {% endif %}
 
       <script src="{{ url_for('static', filename= 'async_script.js') }}"></script>
-
-      <label for="filter">
-        <select id="condition" required>
-          <option value="Empty" selected>Filter</option>
-          <option>Name</option>
-          <option>Id</option>
-        </select>
-      </label>
 
     </div>
 
@@ -43,19 +46,4 @@ Products
 </article>
 {% endblock %}
 
-{% block main %}
-
-<main class="container">
-  <table role="grid">
-    <thead>
-      <tr>
-        <th>Category</th>
-        <th>Name</th>
-        <th>Value</th>
-        <th>Sold units</th>
-        <th>Profit</th>
-      </tr>
-    </thead>
-  </table>
-</main>
-{% endblock %}
+{% block main %}{% endblock %}
