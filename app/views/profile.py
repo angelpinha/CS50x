@@ -10,7 +10,7 @@ from flask import (
     url_for,
 )
 
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 import uuid
 import pyotp
 import qrcode
@@ -34,7 +34,8 @@ def logged_in_user():
 
 
 class Credentials:
-    def verify(self, fields):
+    # Checks for complete credentials in a form, given a dict of fields
+    def verify(self, fields) -> bool:
         # Counter for missing credentials
         missing_credentials = 0
         # Iterate over the credentials
@@ -46,6 +47,66 @@ class Credentials:
         if missing_credentials != 0:
             return False
         return True
+
+    # Gets active user username
+    def get_username(self) -> str:
+        db = get_db()
+        USERNAME = db.execute(
+            """
+            SELECT username
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()[0]
+        return USERNAME
+
+    # Gets active user password_hash
+    def get_password_hash(self) -> str:
+        db = get_db()
+        PWHASH = db.execute(
+            """
+            SELECT password_hash
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()[0]
+        return PWHASH
+
+    # Checks if totp is set for active user
+    def totp_checker(self) -> bool:
+        # Returns True if totp is set, false otherwise
+        db = get_db()
+        TOTP = db.execute(
+            """
+            SELECT totp_key
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()[0]
+        if TOTP is None:
+            is_totp_set = False
+        else:
+            is_totp_set = True
+        return is_totp_set
+
+    # Validates 6-digit 2FA code provided by user
+    def validate_totp(self, given_totp_code) -> bool:
+        db = get_db()
+        totp_key = db.execute(
+            """
+            SELECT totp_key
+            FROM users
+            WHERE id = (?)
+            """,
+            (g.user[0],),
+        ).fetchone()[0]
+
+        # Validates provided 6-digit totp code
+        verify_otp = pyotp.TOTP(totp_key).verify(given_totp_code)
+        return verify_otp
 
 
 @user_profile.route("/profile")
@@ -78,18 +139,8 @@ def profile():
 @login_required
 def create_totp_qrcode():
     # Get username from database
-    db = get_db()
-    rows = db.execute(
-        """
-            SELECT username
-            FROM users
-            WHERE id = (?)
-            """,
-        (g.user[0],),
-    ).fetchone()
-
     # ID data inside the TOTP
-    USERNAME = rows["username"]
+    USERNAME = Credentials().get_username()
     APP_NAME = "CS50x"
     # Generate a secret key to represent in the QR code
     SECRET_KEY = pyotp.random_base32()
@@ -135,7 +186,6 @@ def create_totp_qrcode():
 def two_factor_authentication():
     if request.method == "POST":
         qr_key = session["qr_key"]
-
         try:
             user_input_code = int(request.form.get("totp"))
         except ValueError:
@@ -171,33 +221,20 @@ def two_factor_authentication():
             return redirect(url_for("user_profile.two_factor_authentication"))
     else:
         # Initialize the database and get totp_key from database
-        db = get_db()
-        rows = db.execute(
-            """
-                SELECT totp_key
-                FROM users
-                WHERE id = (?)
-                """,
-            (g.user[0],),
-        ).fetchone()
+        is_totp_set = Credentials().totp_checker()
 
-        if rows["totp_key"] is None:
-            is_totp_set = False
-
+        if is_totp_set is False:
             if session.get("qr_encoded") is None:
                 create_totp_qrcode()
                 qr_encoded = session["qr_encoded"]
                 qr_key = session["qr_key"]
-
             else:
                 qr_encoded = session["qr_encoded"]
                 qr_key = session["qr_key"]
-
             return render_template(
                 "profile/2fa.html", qr_encoded=qr_encoded, is_totp_set=is_totp_set
             )
         else:
-            is_totp_set = True
             return render_template("profile/2fa.html", is_totp_set=is_totp_set)
 
 
@@ -219,25 +256,15 @@ def recovery_key():
             flash("Must provide a valid 6-digit 2FA code", "error")
             return redirect(url_for("user_profile.recovery_key"))
 
-        db = get_db()
-        totp_key = db.execute(
-            """
-            SELECT totp_key
-            FROM users
-            WHERE id = (?)
-            """,
-            (g.user[0],),
-        ).fetchone()[0]
+        verify_otp = Credentials().validate_totp(rk_totp)
 
-        verify_otp = pyotp.TOTP(totp_key).verify(rk_totp)
-
-        if verify_otp is True:
-            session["reveal_rk_info"] = True
-            return redirect(url_for("user_profile.reveal_rk"))
-
-        else:
+        if verify_otp is False:
             flash("Invalid 2FA code", "error")
             return redirect(url_for("user_profile.recovery_key"))
+
+        else:
+            session["reveal_rk_info"] = True
+            return redirect(url_for("user_profile.reveal_rk"))
 
     if "generate_new_recovery_key" in request.form:
         # Counter for missing credentials
@@ -259,17 +286,7 @@ def recovery_key():
         user_confirmation = request.form.get("rk_generate").lower()
         confirmation_message = "generate a new recovery key"
 
-        db = get_db()
-        totp_key = db.execute(
-            """
-            SELECT totp_key
-            FROM users
-            WHERE id = (?)
-            """,
-            (g.user[0],),
-        ).fetchone()[0]
-
-        verify_otp = pyotp.TOTP(totp_key).verify(user_totp)
+        verify_otp = Credentials().validate_totp(user_totp)
 
         if user_confirmation == confirmation_message and verify_otp:
             UUID = str(uuid.uuid4()).upper()
@@ -293,21 +310,7 @@ def recovery_key():
             flash("Please fill out the form accordingly", "error")
             return redirect(url_for("user_profile.recovery_key"))
     else:
-        db = get_db()
-        TOTP = db.execute(
-            """
-            SELECT totp_key
-            FROM users
-            WHERE id = (?)
-            """,
-            (g.user[0],),
-        ).fetchone()[0]
-
-        if TOTP is None:
-            is_totp_set = False
-        else:
-            is_totp_set = True
-
+        is_totp_set = Credentials().totp_checker()
         return render_template("profile/recovery_key.html", is_totp_set=is_totp_set)
 
 
@@ -351,25 +354,13 @@ def deactivate_2fa():
             flash("Must provide a valid 6-digit 2FA code", "error")
             return redirect("/deactivate_2fa")
 
-        db = get_db()
-        rows = db.execute(
-            """
-            SELECT totp_key, password_hash
-            FROM users
-            WHERE id = (?)
-            """,
-            (g.user[0],),
-        ).fetchone()
-
-        totp_key = rows["totp_key"]
-        pwhash = rows["password_hash"]
-
-        verify_otp = pyotp.TOTP(totp_key).verify(totp)
-
+        pwhash = Credentials().get_password_hash()
+        verify_otp = Credentials().validate_totp(totp)
         checker = check_password_hash(pwhash, request.form.get("password"))
 
         if verify_otp and checker:
             UUID = str(uuid.uuid4()).upper()
+            db = get_db()
             db.execute(
                 """
                 UPDATE users
@@ -392,23 +383,157 @@ def deactivate_2fa():
             return redirect(url_for("user_profile.deactivate_2fa"))
 
     else:
-        db = get_db()
-        TOTP = db.execute(
-            """
-            SELECT totp_key
-            FROM users
-            WHERE id = (?)
-            """,
-            (g.user[0],),
-        ).fetchone()[0]
-
-        if TOTP is None:
-            is_totp_set = False
-        else:
-            is_totp_set = True
+        is_totp_set = Credentials().totp_checker()
 
         if is_totp_set:
             return render_template("profile/deactivate_2fa.html")
         # Handles case if totp is not set for account
         else:
             return redirect(url_for("user_profile.two_factor_authentication"))
+
+
+@user_profile.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "POST":
+        fields = {
+            "password": "Current password",
+            "new_password": "New password",
+            "new_password_check": "New password confirmation",
+            "totp": "2FA 6-digit code",
+        }
+
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("user_profile.change_password"))
+
+        pwhash = Credentials().get_password_hash()
+        current_password = request.form.get("password")
+        checker = check_password_hash(pwhash, current_password)
+
+        # Validates current password with db password_hash
+        if checker is not True:
+            flash("Incorrect current password", "error")
+            return redirect(url_for("user_profile.change_password"))
+
+        new_password = request.form.get("new_password")
+        new_password_check = request.form.get("new_password_check")
+
+        # Validates new password and confirmation
+        if new_password != new_password_check:
+            flash("New Password and Confirmation must be equal!", "error")
+            return redirect(url_for("user_profile.change_password"))
+
+        # Validates provided password
+        if current_password == new_password:
+            flash("New Password must be different to Current Password!", "error")
+            return redirect(url_for("user_profile.change_password"))
+
+        # Validates TOTP input type
+        try:
+            totp = int(request.form.get("totp"))
+        except ValueError:
+            flash("Must provide a valid 6-digit 2FA code", "error")
+            return redirect(url_for("user_profile.change_password"))
+
+        verify_otp = Credentials().validate_totp(totp)
+
+        if verify_otp is False:
+            flash("Invalid 2FA code", "error")
+            return redirect(url_for("user_profile.change_password"))
+
+        else:
+            # Updates password_hash for active user
+            NEW_PWHASH = generate_password_hash(new_password)
+            db = get_db()
+            db.execute(
+                """
+                UPDATE users
+                SET password_hash = (?)
+                WHERE id = (?)
+                """,
+                (
+                    NEW_PWHASH,
+                    g.user[0],
+                ),
+            )
+            db.commit()
+
+        # Success!
+        flash("Password has been changed!", "success")
+        return redirect(url_for("user_profile.profile"))
+
+    else:
+        is_totp_set = Credentials().totp_checker()
+        return render_template("profile/change_password.html", is_totp_set=is_totp_set)
+
+
+@user_profile.route("/change_username", methods=["GET", "POST"])
+@login_required
+def change_username():
+    if request.method == "POST":
+        fields = {
+            "new_username": "New username",
+            "password": "Current password",
+            "totp": "2FA 6-digit code",
+        }
+
+        # Check credentials
+        if not Credentials().verify(fields):
+            return redirect(url_for("user_profile.change_username"))
+
+        pwhash = Credentials().get_password_hash()
+        current_password = request.form.get("password")
+        checker = check_password_hash(pwhash, current_password)
+
+        # Validates provided password
+        if checker is not True:
+            flash("Incorrect password", "error")
+            return redirect(url_for("user_profile.change_username"))
+
+        # Validates TOTP input type
+        try:
+            totp = int(request.form.get("totp"))
+        except ValueError:
+            flash("Must provide a valid 6-digit 2FA code", "error")
+            return redirect(url_for("user_profile.change_username"))
+
+        verify_otp = Credentials().validate_totp(totp)
+
+        if verify_otp is False:
+            flash("Invalid 2FA code", "error")
+            return redirect(url_for("user_profile.change_username"))
+
+        else:
+            NEW_USERNAME = request.form.get("new_username")
+            # Updates username
+            try:
+                db = get_db()
+                db.execute(
+                    """
+                    UPDATE users
+                    SET username = (?)
+                    WHERE id = (?)
+                    """,
+                    (
+                        NEW_USERNAME,
+                        g.user[0],
+                    ),
+                )
+                db.commit()
+            except db.IntegrityError:
+                flash("Username has already been taken, try again!", "error")
+                return redirect(url_for("user_profile.change_username"))
+
+        # Success!
+        flash(f"Username has been changed to {NEW_USERNAME}!", "success")
+        return redirect(url_for("user_profile.profile"))
+    else:
+        username = Credentials().get_username()
+        is_totp_set = Credentials().totp_checker()
+
+        return render_template(
+            "profile/change_username.html",
+            username=username,
+            is_totp_set=is_totp_set,
+        )
