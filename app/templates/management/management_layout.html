@@ -24,6 +24,7 @@
       <li><a href="/invoices" class="secondary">Invoices</a></li>
       <li><a href="/inventory" class="secondary">Inventory</a></li>
       <li><a href="/products" class="secondary">Products</a></li>
+      <li><a href="/items" class="secondary">Items</a></li>
       <li><a href="/about" class="secondary">About</a></li>
       {% endif %}
     </ul>
@@ -50,6 +51,9 @@
     </nav>
   </footer>
   <script src="{{ url_for('static', filename = 'theme_switch.js') }}"></script>
+  <script>
+    sessionStorage.clear();
+  </script>
   {% block modal %}{% endblock %}
 </body>
 

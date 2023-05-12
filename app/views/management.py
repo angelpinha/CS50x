@@ -24,13 +24,15 @@ def management_layout():
     return render_template("management/management_layout.html")
 
 
-@management.route("/products", methods=["GET", "POST"])
+@management.route("/items")
+@login_required
+def items():
+    return render_template("management/items.html")
+
+
+@management.route("/products")
 @login_required
 def products():
-    if request.method == "POST":
-        name = request.form.get("trade_name")
-        return render_template("management/products.html", name=name)
-
     return render_template("management/products.html")
 
 
@@ -43,49 +45,100 @@ def new_product():
         for i in range(int(request.form.get("quantity")) - 1):
             PRODUCT[f"component_{i+1}"] = request.form.get(f"component{i+1}")
 
+            # Ensure item aren't in use already
+            if PRODUCT[f"component_{i+1}"]:
+                item_ocupied = database.execute(
+                    "SELECT product_id FROM items WHERE name = ?",
+                    (PRODUCT[f"component_{i+1}"],),
+                ).fetchone()
+
+            if item_ocupied[0]:
+                flash("One of the items selected is in use already")
+                return redirect(url_for("management.new_product"))
+
         # TODO: Ensure product doesn't exist yet
         if PRODUCT["name"]:
-            name = database.execute(
+            name_ocupied = database.execute(
                 "SELECT description FROM products WHERE description = ?",
                 (PRODUCT["name"],),
             ).fetchone()
 
-            if name:
-                flash("The product already exists")
-                return redirect(url_for("management.new_product"))
+        if name_ocupied:
+            flash("The product already exists")
+            return redirect(url_for("management.new_product"))
 
-            else:
-                # TODO: If doesn't, save product into database
-                database.execute(
-                    "INSERT INTO products (description, sell_value) VALUES (?, ?)",
-                    (PRODUCT["name"], 0),
-                )
+        # TODO: If doesn't, save product into database
+        database.execute(
+            "INSERT INTO products (description, sell_value) VALUES (?, ?)",
+            (PRODUCT["name"], 0),
+        )
 
-                def product_deconstructor(P):
-                    result = [P["name"]]
-                    placeholder = ""
-                    for key, value in P.items():
-                        if re.search("component", key):
-                            result.append(value)
-                            placeholder += "?,"
-                    result.append(placeholder[:-1])
-                    return tuple(result)
+        def product_deconstructor(P):
+            result = [P["name"]]
+            placeholder = ""
+            for key, value in P.items():
+                if re.search("component", key):
+                    result.append(value)
+                    placeholder += "?,"
+            result.append(placeholder[:-1])
+            return tuple(result)
 
-                database.execute(
-                    f"""UPDATE items
-                    SET product_id = (SELECT id FROM products WHERE description = ?)
-                    WHERE name IN ({product_deconstructor(PRODUCT)[-1]})""",
-                    product_deconstructor(PRODUCT)[:-1],
-                )
-                database.commit()
+        database.execute(
+            f"""UPDATE items
+            SET product_id = (SELECT id FROM products WHERE description = ?)
+            WHERE name IN ({product_deconstructor(PRODUCT)[-1]})""",
+            product_deconstructor(PRODUCT)[:-1],
+        )
+        database.commit()
 
-                flash(f"Product {PRODUCT['name']} created")
-                return redirect(url_for("management.new_product"))
-
-        # TODO: Else: redirect, sending a messege to user
-        # click.echo(PRODUCT)
+        flash(f"Product {PRODUCT['name']} created")
+        return redirect(url_for("management.new_product"))
 
     return render_template("management/new_product.html")
+
+
+@management.route("/new_item", methods=["GET", "POST"])
+@login_required
+def new_item():
+    if request.method == "POST":
+        # TODO: Create query to construct a new entity
+        ITEM = {
+            "name": request.form.get("name"),
+            "cost_center": request.form.get("cost_center"),
+            "format": request.form.get("format"),
+            "unit": request.form.get("unit"),
+            "value": request.form.get("value"),
+        }
+        validation = 0
+        for key, value in ITEM.items():
+            if ITEM[key]:
+                validation += 1
+
+        if validation == 5:
+            database.execute(
+                """INSERT INTO items (name, cost_center, format, unit, purchase_value) VALUES (?,?,?,?,?)""",
+                (
+                    ITEM["name"],
+                    ITEM["cost_center"],
+                    ITEM["format"],
+                    ITEM["unit"],
+                    ITEM["value"],
+                ),
+            )
+            database.execute(
+                """INSERT INTO inventory (item_id, initial_quantity, stored_quantity)
+                    SELECT id, 0, 0 FROM items WHERE name = ?""",
+                (ITEM["name"],),
+            )
+            database.commit()
+
+            flash("Item Created Succesfully")
+            return redirect(url_for("management.new_item"))
+
+        flash("Failed to correctly provide data")
+        return redirect(url_for("management.new_item"))
+
+    return render_template("management/new_item.html")
 
 
 @management.route("/search")
@@ -108,13 +161,13 @@ def search():
 @management.route("/inventory", methods=["GET", "POST"])
 @login_required
 def inventory():
-    # TODO Return the item and its values
+    # Return the item and its values
     if request.method == "POST":
         item = request.form.get("item")
 
         if item:
             table = database.execute(
-                """SELECT name, stored_quantity, unit
+                """SELECT name, stored_quantity, unit, purchase_value
                     FROM items INNER JOIN inventory
                     ON items.id = inventory.item_id
                     WHERE name = ?""",
@@ -123,8 +176,7 @@ def inventory():
 
             return render_template("management/inventory.html", table=table)
 
-    else:
-        return render_template("management/inventory.html")
+    return render_template("management/inventory.html")
 
 
 @management.route("/invoices")
