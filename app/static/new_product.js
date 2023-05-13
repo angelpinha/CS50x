@@ -1,20 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Checking if page was reloaded
-    const pageAccessedByReload = (
-        (window.performance.navigation && window.performance.navigation.type === 1) ||
-        window.performance
-        .getEntriesByType('navigation')
-        .map((nav) => nav.type)
-        .includes('reload')
-    );
-    // If page was reloaded, clear session Storage
-    if (pageAccessedByReload == true) {
-        sessionStorage.clear();
-    }
 
     // Save name of product into session storage each time user types in
-    document.querySelector('#name').oninput = () => {
-        sessionStorage.setItem('NAME', document.querySelector('#name').value);
+    document.querySelector("#name").oninput = () => {
+        sessionStorage.setItem("NAME", document.querySelector("#name").value);
     }
 
     // Number of components provided by user:

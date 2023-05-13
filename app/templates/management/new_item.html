@@ -1,0 +1,64 @@
+{% extends "management/management_layout.html" %}
+
+{% block title %}
+New Item
+{% endblock %}
+{% block header %}
+<article>
+  <header>
+    <h1>New Item</h1>
+  </header>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <ul class="flashes container">
+    {% for message in messages %}
+    <li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+</article>
+<div class="container-fluid">
+  <div class="grid">
+    <label for="name">
+      <input autocomplete="off" id="name" placeholder="Item Name" type="text">
+    </label>
+    <label for="cost_center">
+      <select id="cost_center">
+        <option value="" selected>Cost Center</option>
+        <option>operational</option>
+        <option>personal</option>
+        <option>machinery</option>
+        <option>product</option>
+      </select>
+    </label>
+    <label for="format">
+      <input autocomplete="off" id="format" placeholder="Format" type="text">
+    </label>
+    <label for="Unit">
+      <select id="unit">
+        <option value="" selected>Unit</option>
+        <option>u</option>
+        <option>g</option>
+        <option>ml</option>
+      </select>
+    </label>
+    <label for="format_value">
+      <input id="format_value" placeholder="Format Value" type="text">
+    </label>
+    <nav class="breadcrumb">
+      <form action="/new_item" method="post">
+        <!--Create inputs dynamically-->
+        <button id="save_item" type="submit">Save new item</button>
+      </form>
+    </nav>
+    <label for="restore_values">
+      <button id="restore_values" onclick="location.reload()" type="button">Restore values</button>
+    </label>
+  </div>
+  <div id="component_status"></div>
+
+  <script src="{{ url_for('static', filename='new_item.js') }}"></script>
+</div>
+
+{% endblock %}

@@ -28,7 +28,7 @@ CREATE TABLE "suppliers" (
 CREATE TABLE "products" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"description"	TEXT NOT NULL,
-	"sell_value"	INTEGER NOT NULL,
+	"price"	INTEGER NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
@@ -36,7 +36,7 @@ CREATE TABLE "items" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"product_id"	INTEGER,
 	"name"	TEXT NOT NULL,
-	"department"	TEXT NOT NULL,
+	"cost_center"	TEXT NOT NULL,
 	"format"	INTEGER NOT NULL,
 	"unit"	TEXT NOT NULL,
 	"purchase_value"	INTEGER NOT NULL,
