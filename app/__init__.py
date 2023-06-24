@@ -11,6 +11,7 @@ def create_app():
     from .views.auth import auth
     from .views.profile import user_profile
     from .views.management import management
+    from .views.checkout import checkout
 
     @app.route("/")
     @login_required
@@ -24,6 +25,7 @@ def create_app():
     app.register_blueprint(auth)
     app.register_blueprint(user_profile)
     app.register_blueprint(management)
+    app.register_blueprint(checkout)
 
     # Initialize database after app initialitation
     from . import db

@@ -1,0 +1,39 @@
+{% extends "management/management_layout.html" %}
+
+{% block title %}
+New Category
+{% endblock %}
+{% block header %}
+<article>
+  <header>
+    <h1>New Category</h1>
+  </header>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <ul class="flashes container">
+    {% for message in messages %}
+    <li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+</article>
+<div class="container">
+  <div class="grid">
+    </label>
+    <nav class="grid">
+      <form action="/new_category" method="post">
+        <input autocomplete="off" id="category" name="product_category" placeholder="Name of category" type="text">
+        <button id="save_category" type="submit">Save new category</button>
+      </form>
+      <label for="reset">
+        <button id="reset" type="button" onclick="location.reload()">Reset</button>
+      </label>
+    </nav>
+    </label>
+  </div>
+  <div id="component_status"></div>
+  <ul class="container-fluid" id="components" role="listbox"></ul>
+</div>
+
+{% endblock %}

@@ -9,5 +9,6 @@ setup(
         "flask",
         "qrcode",
         "pyotp",
+        "pillow",
     ],
 )

@@ -24,11 +24,11 @@ New Product
       <input autocomplete="off" id="name" placeholder="Product Name" type="text">
     </label>
     <label for="Category">
-      <select id="condition">
+      <select id="category">
         <option value="" selected>Category</option>
-        <option>Clothes</option>
-        <option>Footwear</option>
-        <option>Electronics</option>
+        {% for data in categories %}
+        <option>{{ data[0] }}</option>
+        {% endfor %}
       </select>
     </label>
     <label for="sell_value">
