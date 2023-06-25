@@ -1,0 +1,50 @@
+{% extends "management/management_layout.html" %}
+
+{% block title %}
+New Supplier
+{% endblock %}
+{% block header %}
+<article>
+	<header>
+		<h1>New Supplier</h1>
+	</header>
+	{% with messages = get_flashed_messages() %}
+	{% if messages %}
+	<ul class="flashes container">
+		{% for message in messages %}
+		<li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+		{% endfor %}
+	</ul>
+	{% endif %}
+	{% endwith %}
+</article>
+<div class="container">
+	<aside>
+		<div>Supplier Name</div>
+		<input autocomplete="off" id="supplier_name" placeholder="Supplier" type="text">
+	</aside>
+
+	<select id="status">
+		<option value="" selected>Status</option>
+		{% for option in status %}
+		<option>{{ option }}</option>
+		{% endfor %}
+	</select>
+	<div class="grid">
+		<button style="height: 65px; line-height: 35px;" id="restore_values" onclick="location.reload()" type="button">
+			Restore values
+		</button>
+
+		<form action="/new_supplier" method="post">
+			<button disabled id="save_supplier" type="submit">Save Supplier</button>
+			<input hidden id="supplier_to_send" name="supplier">
+			<input hidden id="status_to_send" name="status">
+		</form>
+	</div>
+</div>
+
+<script src="{{ url_for('static', filename = 'new_supplier.js') }}"></script>
+<script src="{{ url_for('static', filename = 'modal.js') }}"></script>
+
+
+{% endblock %}

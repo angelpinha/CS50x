@@ -1,6 +1,7 @@
+// Fetch item name from server
 let input = document.querySelector('input');
 input.addEventListener('input', async function () {
-  fetch('/search?q=' + input.value)
+  fetch('/search?item_q=' + input.value)
     .then(response => response.json())
     .then(data => {
       let html = '';

@@ -18,47 +18,51 @@ New Item
   {% endif %}
   {% endwith %}
 </article>
-<div class="container-fluid">
-  <div class="grid">
-    <label for="name">
-      <input autocomplete="off" id="name" placeholder="Item Name" type="text">
-    </label>
-    <label for="cost_center">
-      <select id="cost_center">
-        <option value="" selected>Cost Center</option>
-        <option>operational</option>
-        <option>personal</option>
-        <option>machinery</option>
-        <option>product</option>
-      </select>
-    </label>
-    <label for="format">
-      <input autocomplete="off" id="format" placeholder="Format" type="text">
-    </label>
-    <label for="Unit">
+<div class="values">
+  <div class="container">
+    <div>Item Name</div>
+    <input autocomplete="off" id="name" placeholder="Item Name" type="text">
+
+    <div class="grid">
+      <label for="cost_center">
+        Cost Center
+        <select id="cost_center">
+          <option value="" selected>Cost Center</option>
+          {% for center in cost_center %}
+          <option>{{ center }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label for="format">
+        Format
+        <input autocomplete="off" id="format" placeholder="Format" type="text">
+      </label>
+    </div>
+    <div class="grid">
       <select id="unit">
         <option value="" selected>Unit</option>
-        <option>u</option>
-        <option>g</option>
-        <option>ml</option>
+        {% for unit in units %}
+        <option>{{ unit }}</option>
+        {% endfor %}
       </select>
-    </label>
-    <label for="format_value">
       <input id="format_value" placeholder="Format Value" type="text">
-    </label>
-    <nav class="breadcrumb">
+    </div>
+    <div class="grid">
       <form action="/new_item" method="post">
         <!--Create inputs dynamically-->
         <button id="save_item" type="submit">Save new item</button>
       </form>
-    </nav>
-    <label for="restore_values">
-      <button id="restore_values" onclick="location.reload()" type="button">Restore values</button>
-    </label>
+    </div>
   </div>
-  <div id="component_status"></div>
-
-  <script src="{{ url_for('static', filename='new_item.js') }}"></script>
 </div>
+<div class="container">
+  <label for="restore_values">
+    <button id="restore_values" onclick="location.reload()" type="button">Restore values</button>
+  </label>
+</div>
+
+
+<div id="component_status"></div>
+<script src="{{ url_for('static', filename='new_item.js') }}"></script>
 
 {% endblock %}

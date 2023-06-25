@@ -1,0 +1,68 @@
+{% extends "management/management_layout.html" %}
+
+{% block title %}
+New Purchase
+{% endblock %}
+{% block header %}
+<article>
+	<header>
+		<h1>New Purchase</h1>
+	</header>
+	{% with messages = get_flashed_messages() %}
+	{% if messages %}
+	<ul class="flashes container">
+		{% for message in messages %}
+		<li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+		{% endfor %}
+	</ul>
+	{% endif %}
+	{% endwith %}
+</article>
+<div id="to_send" class="container">
+	<aside>
+		<div>Supplier Name</div>
+		<input autocomplete="off" id="supplier" placeholder="Supplier" type="search">
+
+		<details open>
+			<summary aria-haspopup="listbox"></summary>
+			<ul id="supplier_options" role="listbox"></ul>
+		</details>
+	</aside>
+
+	<div class="grid">
+		<label for="invoice_n">
+			Invoice Number
+			<input autocomplete="off" id="invoice_n" placeholder="N°" type="text">
+		</label>
+		<label for="date">
+			Reception Date
+			<input id="date" placeholder="Reception date" type="date">
+		</label>
+	</div>
+	<div class="grid">
+		<button style="height: 65px; line-height: 35px;" id="add_item">
+			Add an item
+		</button>
+		<button style="height: 65px; line-height: 35px;" id="restore_values" onclick="location.reload()" type="button">
+			Restore values
+		</button>
+
+		<form action="/new_purchase" method="post">
+			<button disabled id="save_invoice" type="submit">Save Invoice</button>
+			<input hidden id="item_number" name="item_number">
+		</form>
+		<input id="total" readonly value="Total: $0">
+	</div>
+</div>
+
+<div class="container">
+	<!--Add elements dinamically-->
+	<div id="item_fields">
+	</div>
+</div>
+
+<script src="{{ url_for('static', filename='new_purchase.js') }}"></script>
+<script src="{{ url_for('static', filename = 'modal.js') }}"></script>
+
+
+{% endblock %}

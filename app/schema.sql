@@ -28,7 +28,14 @@ CREATE TABLE "suppliers" (
 CREATE TABLE "products" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"description"	TEXT NOT NULL,
-	"price"	INTEGER NOT NULL,
+	"price"	REAL NOT NULL,
+	"category" TEXT NOT NULL,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+
+CREATE TABLE "categories" (
+	"id" INTEGER NOT NULL UNIQUE,
+	"product_category" TEXT NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
@@ -39,7 +46,7 @@ CREATE TABLE "items" (
 	"cost_center"	TEXT NOT NULL,
 	"format"	INTEGER NOT NULL,
 	"unit"	TEXT NOT NULL,
-	"purchase_value"	INTEGER NOT NULL,
+	"updated_price"	REAL NOT NULL,
 	FOREIGN KEY("product_id") REFERENCES "products"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
@@ -57,6 +64,7 @@ CREATE TABLE "purchases" (
 	"invoice_number"	INTEGER NOT NULL,
 	"date"	TEXT NOT NULL,
 	"quantity"	INTEGER NOT NULL,
+	"purchase_price" REAL NOT NULL,
 	FOREIGN KEY("supplier_id") REFERENCES "suppliers"("id"),
 	FOREIGN KEY("item_id") REFERENCES "items"("id")
 );
