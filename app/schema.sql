@@ -70,14 +70,11 @@ CREATE TABLE "purchases" (
 );
 
 CREATE TABLE "sales" (
-	"seller_id"	INTEGER,
+	"id"	INTEGER NOT NULL UNIQUE,
+	"transaction_number" INTEGER NOT NULL,
 	"product_id"	INTEGER,
-	"customer_id"	INTEGER,
-	"transaction_number"	INTEGER NOT NULL UNIQUE,
 	"quantity"	INTEGER NOT NULL,
-	"date"	TEXT NOT NULL,
-	PRIMARY KEY("transaction_number" AUTOINCREMENT),
-	FOREIGN KEY("product_id") REFERENCES "products"("id"),
-	FOREIGN KEY("seller_id") REFERENCES "users"("id"),
-	FOREIGN KEY("customer_id") REFERENCES "customers"("id")
+	"amount"	REAL NOT NULL,
+	PRIMARY KEY("id" AUTOINCREMENT),
+	FOREIGN KEY("product_id") REFERENCES "products"("id")
 );

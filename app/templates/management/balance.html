@@ -1,0 +1,42 @@
+{% extends "management/management_layout.html" %}
+
+{% block title %}
+Balance
+{% endblock %}
+{% block header %}
+<article>
+	<header>
+		<h1>Balance</h1>
+	</header>
+	{% with messages = get_flashed_messages() %}
+	{% if messages %}
+	<ul class="flashes container">
+		{% for message in messages %}
+		<li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+		{% endfor %}
+	</ul>
+	{% endif %}
+	{% endwith %}
+	{% endblock %}
+
+	{% block main %}
+
+	<main class="container">
+		<table role="grid">
+			<thead>
+				<tr>
+					<th>Revenues</th>
+					<th>Expenses</th>
+					<th>Income</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					{% for data in table %}
+					<td>{{ data }}</td>
+					{% endfor %}
+				</tr>
+			</tbody>
+		</table>
+	</main>
+	{% endblock %}
