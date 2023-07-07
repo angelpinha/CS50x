@@ -22,39 +22,47 @@ def checkout_layout():
     return render_template("checkout/checkout_layout.html")
 
 
+# product class to validate each product to be sold
 class Sell_product:
     def __init__(self, fields):
         self.name = fields["name"]
         self.quantity = fields["quantity"]
         self.total = fields["total"]
 
+    # Function to make printable each property of the instance, as a formatted string
     def __str__(self):
         return f"name:{self.name}, quantity:{self.quantity}, total:{self.total}"
 
+    # name getter, to return the name property of an instance
     @property
     def name(self):
         return self._name
 
+    # Name setter, to construct the name property of an instance
     @name.setter
     def name(self, name):
         if not name:
             raise NameError("Failed to provide valid name")
         self._name = name
 
+    # Quantity getter, to return the quantity property of an instance
     @property
     def quantity(self):
         return self._quantity
 
+    # Quantity setter, to construct the quantity property of an instance
     @quantity.setter
     def quantity(self, quantity):
         if not quantity or quantity.isnumeric() == False:
             raise NameError("Failed to provide valid quantity")
         self._quantity = quantity
 
+    # Total getter, to return the total property of an instance
     @property
     def total(self):
         return self._total
 
+    # Total setter, to construct the total property of an instance
     @total.setter
     def total(self, total):
         if not total or total.isnumeric() == False:
@@ -66,7 +74,9 @@ class Sell_product:
 @login_required
 def new_sale():
     if request.method == "POST":
+        # list to save each product to sell
         Products = []
+        # Get the number of products to sell
         product_number = request.form.get("product_number")
         if product_number:
             total_sale = 0
@@ -79,6 +89,7 @@ def new_sale():
                     }
                 )
                 try:
+                    # Create a new instance of the Sell_product class
                     Products[i] = Sell_product(Products[i])
                     # Check if there is enough quantity of the product to sell
                     items_quantity = database.execute(
@@ -89,6 +100,7 @@ def new_sale():
                         WHERE product_id IN (SELECT id FROM products WHERE description = ?))""",
                         (Products[i].name,),
                     ).fetchall()
+                    # Check if there is enough quantity of items to sell
                     not_enough = 0
                     for item in range(len(items_quantity)):
                         if items_quantity[item][1] < int(Products[i].quantity):
@@ -115,16 +127,34 @@ def new_sale():
                                     items_id[row][0],
                                 ),
                             )
-                        total_sale += int(Products[i].total)
-                        # TODO: Create entity to save total income
-                        # TODO: Update balance table
-                        database.commit()
+                        total_sale += float(Products[i].total)
                 except NameError as e:
                     flash(e.args[i])
                     return redirect(url_for("checkout.new_sale"))
             if not_enough > 0:
                 return redirect(url_for("checkout.new_sale"))
-            flash("Sell saved")
+            # Set the number of transaction
+            last_transaction_number = database.execute(
+                "SELECT MAX(transaction_number) FROM sales"
+            ).fetchone()
+            if last_transaction_number:
+                new_transaction_number = last_transaction_number[0][0] + 1
+            else:
+                new_transaction_number = 1
+            # Update sales table
+            for product in range(int(product_number)):
+                database.execute(
+                    """INSERT INTO sales (transaction_number, product_id, quantity, amount)
+                    VALUES (?, (SELECT id FROM products WHERE description = ?), ?, ?)""",
+                    (
+                        new_transaction_number,
+                        Products[product].name,
+                        Products[product].quantity,
+                        Products[product].total,
+                    ),
+                )
+            database.commit()
+            flash("Sale saved")
 
         return redirect(url_for("checkout.new_sale"))
     return render_template("checkout/new_sale.html")

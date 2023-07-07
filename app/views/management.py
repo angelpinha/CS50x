@@ -23,6 +23,32 @@ def management_layout():
     return render_template("management/management_layout.html")
 
 
+@management.route("/balance")
+@login_required
+def balance():
+    # Get the total money earned from sales
+    revenues = database.execute("SELECT SUM(quantity * amount) FROM sales").fetchone()
+    # Get the total money spent on purchases
+    expenses = database.execute(
+        "SELECT SUM(quantity * purchase_price) FROM purchases"
+    ).fetchone()
+    # Get 0 if no sales
+    if revenues[0] is None:
+        revenues = 0
+    else:
+        revenues = revenues[0]
+    # Get 0 if no purchases
+    if expenses[0] is None:
+        expenses = 0
+    else:
+        expenses = expenses[0]
+    # Calculate income
+    income = revenues - expenses
+    # Return balance
+    table = [revenues, expenses, income]
+    return render_template("management/balance.html", table=table)
+
+
 @management.route("/items")
 @login_required
 def items():
@@ -49,6 +75,10 @@ def new_product():
         # Product components
         for i in range(int(request.form.get("quantity")) - 3):
             PRODUCT[f"component_{i+1}"] = request.form.get(f"component{i+1}")
+            for j in range(i):
+                if re.search(PRODUCT[f"component_{i+1}"], PRODUCT[f"component_{j+1}"]):
+                    flash("The same item cannot be used twice")
+                    return redirect(url_for("management.new_product"))
 
             # Ensure item isn't already in use
             if PRODUCT[f"component_{i+1}"]:
@@ -56,7 +86,7 @@ def new_product():
                     "SELECT product_id FROM items WHERE name = ?",
                     (PRODUCT[f"component_{i+1}"],),
                 ).fetchone()
-                if item_ocupied == None:
+                if item_ocupied[0] != None:
                     flash(
                         f"One of the items selected is in use already: {PRODUCT[f'component_{i+1}']}"
                     )
@@ -78,6 +108,7 @@ def new_product():
                 (PRODUCT["name"], PRODUCT["sell_value"], PRODUCT["category"]),
             )
 
+        # Process each product to enter it in the database
         def product_deconstructor(P):
             result = [P["name"]]
             placeholder = ""
@@ -126,9 +157,10 @@ def new_category():
                 flash("New category created")
                 return redirect(url_for("management.new_category"))
 
+            # Otherwise redirect
             flash("The category already exists")
             return redirect(url_for("management.new_category"))
-
+        # If the name is invalid
         flash("Invalid name")
         return redirect(url_for("management.new_category"))
 
@@ -147,13 +179,23 @@ def new_item():
             "unit": request.form.get("unit"),
             "value": request.form.get("value"),
         }
+
+        # Make sure the name provided is not in use
+        item_ocupied = database.execute(
+            "SELECT name FROM items WHERE name = ?",
+            (ITEM["name"],),
+        ).fetchone()
+        if item_ocupied:
+            flash("The item name provided is already in use")
+            return redirect(url_for("management.new_item"))
+
         # Make sure each entry has been written
         validation = 0
+        fields_required = 5
         for key, value in ITEM.items():
             if ITEM[key]:
                 validation += 1
-
-        if validation == 5:
+        if validation == fields_required:
             database.execute(
                 """INSERT INTO items (name, cost_center, format, unit, updated_price) VALUES (?,?,?,?,?)""",
                 (
@@ -184,7 +226,7 @@ def new_item():
     )
 
 
-# Search route
+# Search route to fetch values from client side
 @management.route("/search")
 @login_required
 def search():
@@ -212,7 +254,7 @@ def search():
         for row in range(len(suppliers)):
             Json.append({"name": suppliers[row]["supplier_name"]})
 
-    # Search product name
+    # Search product name and price
     elif product_q:
         products = database.execute(
             "SELECT description, price FROM products WHERE description LIKE ?||?",
@@ -242,12 +284,19 @@ def inventory():
                     WHERE name = ?""",
                 (item,),
             ).fetchall()
-
+            # Return the item typed in search
             return render_template("management/inventory.html", table=table)
 
-    return render_template("management/inventory.html")
+    table = database.execute(
+        """SELECT name, stored_quantity, unit, updated_price
+                    FROM items INNER JOIN inventory
+                    ON items.id = inventory.item_id LIMIT 10"""
+    )
+    # Return a general list of items
+    return render_template("management/inventory.html", table=table)
 
 
+# Purchases template
 @management.route("/purchases")
 @login_required
 def purchases():
@@ -262,33 +311,40 @@ class Purchase_item:
         self.unit_value = fields["unit_value"]
         self.subtotal = fields["subtotal"]
 
+    # Function to make printable each property of the instance, as a formatted string
     def __str__(self):
         return f"name:{self.name}, quantity:{self.quantity}, unit value: {self.unit_value}, subtotal: {self.subtotal}"
 
+    # name getter, to return the name property of an instance
     @property
     def name(self):
         return self._name
 
+    # Name setter, to construct the name property of an instance
     @name.setter
     def name(self, name):
         if not name:
             raise NameError("Failed to provide valid name")
         self._name = name
 
+    # Quantity getter, to return the quantity property of an instance
     @property
     def quantity(self):
         return self._quantity
 
+    # Quantity setter, to construct the quantity property of an instance
     @quantity.setter
     def quantity(self, quantity):
         if not quantity or quantity.isnumeric() == False:
             raise NameError("Failed to provide valid quantity")
         self._quantity = quantity
 
+    # unit value getter, to return the unit_value property of an instance
     @property
     def unit_value(self):
         return self._unit_value
 
+    # unit value setter, to return the unit_value property of an instance
     @unit_value.setter
     def unit_value(self, unit_value):
         if not unit_value or unit_value.isnumeric() == False:
@@ -326,6 +382,7 @@ def new_purchase():
         Purchase = []
         item_number = request.form.get("item_number")
         if item_number:
+            total_price = 0
             for i in range(int(item_number)):
                 Purchase.append(
                     {
@@ -381,8 +438,7 @@ def new_purchase():
                         (Purchase[i].name, Purchase[i].name),
                     ).fetchall()
 
-                    # TODO: Search for a probable bug
-                    # Update new purchase value of item, if corresponds (Use the Weighted average price)
+                    # wap (weighted average price) function, to update an item value
                     def wap(Prices):
                         total_prices = []
                         checked = []
@@ -412,30 +468,55 @@ def new_purchase():
                         wheighted_average = total_price_by_quantity / quantities
                         return wheighted_average
 
+                    # Update new purchase value of the item
                     database.execute(
                         "UPDATE items SET updated_price = ? WHERE name = ?",
                         (wap(prices), Purchase[i].name),
                     )
-                    database.commit()
+                    # TODO: Use this value to check if the purchase can be made
+                    # Update total purchase price
+                    total_price += float(Purchase[i].subtotal)
 
                 except NameError as e:
                     flash(e.args[i])
-                    redirect(url_for("management.new_purchase"))
+                    return redirect(url_for("management.new_purchase"))
 
+            # Calculate revenues, expenses
+            revenues = database.execute(
+                "SELECT SUM(quantity * amount) FROM sales"
+            ).fetchone()[0]
+            if not revenues:
+                revenues = 0
+            expenses = database.execute(
+                "SELECT SUM(quantity * purchase_price) FROM purchases"
+            ).fetchone()[0]
+            if not expenses:
+                expenses = 0
+            # Check if there is registry and income greater than or equal to the total purchase price
+            if revenues - expenses < total_price:
+                flash("There are insufficient funds to make this purchase")
+                return redirect(url_for("management.new_purchase"))
+
+            # Update product value (40% of profit)
+            for item in range(len(Purchase)):
+                database.execute(
+                    """UPDATE products SET price = (SELECT SUM(updated_price) * 1.4
+                FROM items WHERE product_id = (SELECT product_id FROM items WHERE name = ?))
+                WHERE id = (SELECT product_id FROM items WHERE name = ?)""",
+                    (
+                        Purchase[item].name,
+                        Purchase[item].name,
+                    ),
+                )
+            database.commit()
             flash("New purchase saved")
-            redirect(url_for("management.new_purchase"))
+            return redirect(url_for("management.new_purchase"))
 
         else:
             flash("Failed to provide an item to purchase")
-            redirect(url_for("management.new_purchase"))
+            return redirect(url_for("management.new_purchase"))
 
     return render_template("management/new_purchase.html")
-
-
-@management.route("/update_value")
-@login_required
-def update_value():
-    return render_template("management/update_value.html")
 
 
 # TODO: Show saved invoices
@@ -448,11 +529,13 @@ def invoices():
 @management.route("/new_supplier", methods=["GET", "POST"])
 @login_required
 def new_supplier():
+    # Global list of supplier status
     STATUS = ["Active", "Inactive"]
+
     if request.method == "POST":
         supplier = request.form.get("supplier")
         status = request.form.get("status")
-
+        # Check if supplier already exists
         if supplier:
             existing_supplier = database.execute(
                 "SELECT supplier_name FROM suppliers WHERE supplier_name = ?",
@@ -463,6 +546,7 @@ def new_supplier():
                 return redirect(url_for("management.new_supplier"))
 
             if status in STATUS:
+                # Save supplier into database
                 database.execute(
                     "INSERT INTO suppliers (supplier_name, status) VALUES (?, ?)",
                     (supplier, status),
