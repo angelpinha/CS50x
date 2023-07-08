@@ -51,6 +51,9 @@
     </nav>
   </footer>
   <script src="{{ url_for('static', filename = 'theme_switch.js') }}"></script>
+  <script>
+    sessionStorage.clear();
+  </script>
   {% block modal %}{% endblock %}
 </body>
 
