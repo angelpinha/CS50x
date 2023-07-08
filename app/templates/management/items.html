@@ -1,35 +1,49 @@
-{% extends "management/management_layout.html" %}
+{% extends "layout.html" %}
 
 {% block title %}
 Items
 {% endblock %}
-{% block header %}
-<article>
-  <header>
-    <h1>Items and Components</h1>
 
+{% block main %}
+<article>
+
+  <header>
+    <h1>Items</h1>
   </header>
 
-  <div class="container-fluid">
-    <nav aria-label="breadcrumb">
-      <details role="list">
-        <summary aria-haspopup="listbox">Settings</summary>
-        <ul role="listbox">
-          <li><a href="/new_item">New item</a></li>
-          <li><a>Modify an item</a></li>
-        </ul>
-      </details>
-      <details role="list">
-        <summary aria-haspopup="listbox">Management Tools</summary>
-        <ul role="listbox">
-          <!--complete list and its general information: Priority, aggregate cost, sale value -->
-          <li><a>List of items</a></li>
-          <!--Rankings: select different filters based on top: units sold, point reviews, price-to-point ratio-->
-          <li><a>Rankings</a></li>
-          <li><a>Statistics</a></li>
-        </ul>
-      </details>
-    </nav>
-    {% endblock %}
+  <div class="container">
+    <div class="grid">
 
-    {% block main %}{% endblock %}
+      <div>
+        <a href="/new_item" role="button" class="container"><strong>Create new item</strong></a>
+      </div>
+
+      <hr>
+
+      <div>
+        <a href="/items" role="button" class="container outline secondary"
+          data-tooltip="Feature in progress :)"><strong>Modify existing
+            item</strong></a>
+      </div>
+
+      <hr>
+
+      <div>
+        <a href="/items" role="button" class="container outline secondary"
+          data-tooltip="Feature in progress :)"><strong>Delete
+            item</strong></a>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="/management" class="outline">Back to management</a></li>
+      </ul>
+    </nav>
+  </footer>
+
+</article>
+{% endblock %}
