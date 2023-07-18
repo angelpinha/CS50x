@@ -108,15 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			document.querySelector("#total").value = '$';
 		}
 	};
-	document.querySelector("#name").oninput = () => {
-		if (document.querySelector("#unit_price").value.slice(1) === '') {
-			document.querySelector("#check_out").setAttribute("disabled", "true");
-			document.querySelector("#save_product").setAttribute("disabled", "true");
-			document.querySelector("#unit_price").value = '$';
-			document.querySelector("#quantity").value = '';
-			document.querySelector("#total").value = '$';
-		}
-	};
+
 
 	document.querySelector("#save_product").onclick = () => {
 		document.querySelector("#save_product").setAttribute("disabled", "true");
@@ -168,10 +160,21 @@ document.addEventListener("DOMContentLoaded", () => {
 			document.getElementById(`${document.querySelector("#name").value}_quantity`).innerHTML = newQuantity;
 			document.getElementById(`${document.querySelector("#name").value}_total`).innerHTML = newTotal;
 			// Update products within form
-			document.querySelector(`#q_${document.querySelector("#name").value}`).value = newQuantity;
-			document.querySelector(`#t_${document.querySelector("#name").value}`).value = newTotal;
+			if (document.querySelector(`#q_${document.querySelector("#name").value}`)) {
+				document.querySelector(`#q_${document.querySelector("#name").value}`).value = newQuantity;
+			}
+			if (document.querySelector(`#t_${document.querySelector("#name").value}`)) {
+				document.querySelector(`#t_${document.querySelector("#name").value}`).value = newTotal;
+			}
 		}
 		document.querySelector("#product_number").value = Object.keys(PRODUCTS).length;
+		let toPay = 0;
+		const keys = Object.keys(PRODUCTS);
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			toPay += Number(PRODUCTS[key]["total"]);
+		}
+		document.querySelector("#to_pay").value = `$${toPay}`;
 
 		document.querySelector("#name").value = '';
 		document.querySelector("#product_options").innerHTML = '';

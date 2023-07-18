@@ -20,18 +20,18 @@ database = LocalProxy(get_db)
 @management.route("/management")
 @login_required
 def management_layout():
-    return render_template("management/management_layout.html")
+    return render_template("management/management.html")
 
 
 @management.route("/balance")
 @login_required
 def balance():
     # Get the total money earned from sales
-    revenues = database.execute("SELECT SUM(quantity * amount) FROM sales").fetchone()
+    revenues = database.execute("SELECT revenues FROM balance").fetchone()
     # Get the total money spent on purchases
-    expenses = database.execute(
-        "SELECT SUM(quantity * purchase_price) FROM purchases"
-    ).fetchone()
+    expenses = database.execute("SELECT expenses FROM balance").fetchone()
+    # Get the total income
+    income = database.execute("SELECT income FROM balance").fetchone()
     # Get 0 if no sales
     if revenues[0] is None:
         revenues = 0
@@ -76,7 +76,7 @@ def new_product():
         for i in range(int(request.form.get("quantity")) - 3):
             PRODUCT[f"component_{i+1}"] = request.form.get(f"component{i+1}")
             for j in range(i):
-                if re.search(PRODUCT[f"component_{i+1}"], PRODUCT[f"component_{j+1}"]):
+                if PRODUCT[f"component_{i+1}"] == PRODUCT[f"component_{j+1}"]:
                     flash("The same item cannot be used twice")
                     return redirect(url_for("management.new_product"))
 
@@ -257,7 +257,7 @@ def search():
     # Search product name and price
     elif product_q:
         products = database.execute(
-            "SELECT description, price FROM products WHERE description LIKE ?||?",
+            "SELECT description, ROUND(price, 2) AS price FROM products WHERE description LIKE ?||?",
             (product_q, "%"),
         ).fetchall()
 
@@ -278,7 +278,7 @@ def inventory():
 
         if item:
             table = database.execute(
-                """SELECT name, stored_quantity, unit, updated_price
+                """SELECT name, stored_quantity, unit, ROUND(updated_price, 2)
                     FROM items INNER JOIN inventory
                     ON items.id = inventory.item_id
                     WHERE name = ?""",
@@ -288,7 +288,7 @@ def inventory():
             return render_template("management/inventory.html", table=table)
 
     table = database.execute(
-        """SELECT name, stored_quantity, unit, updated_price
+        """SELECT name, stored_quantity, unit, ROUND(updated_price, 2)
                     FROM items INNER JOIN inventory
                     ON items.id = inventory.item_id LIMIT 10"""
     )
@@ -350,6 +350,35 @@ class Purchase_item:
         if not unit_value or unit_value.isnumeric() == False:
             raise NameError("Failed to provide valid unit value")
         self._unit_value = unit_value
+
+
+# wap (weighted average price) function, to update an item value
+def wap(Prices):
+    prices_and_quantities = []
+    checked = []
+    for i in range(len(Prices)):
+        current_price = Prices[i][0]
+        quantity = Prices[i][1]
+
+        if current_price not in checked:
+            if i < len(Prices) - 1:
+                for j in range(i + 1, len(Prices), 1):
+                    next_price = Prices[j][0]
+                    if current_price == next_price:
+                        quantity += Prices[j][1]
+            n_price_by_quantity = current_price * quantity
+
+            prices_and_quantities.append((n_price_by_quantity, quantity))
+            checked.append(current_price)
+
+    total_price_by_quantity = prices_and_quantities[0][0]
+    total_quantity = prices_and_quantities[0][1]
+    for p in range(1, len(prices_and_quantities), 1):
+        total_price_by_quantity = total_price_by_quantity + prices_and_quantities[p][0]
+        total_quantity = total_quantity + prices_and_quantities[p][1]
+
+    wheighted_average = total_price_by_quantity / total_quantity
+    return wheighted_average
 
 
 @management.route("/new_purchase", methods=["GET", "POST"])
@@ -431,49 +460,18 @@ def new_purchase():
                     )
 
                     prices = database.execute(
-                        """SELECT purchase_price FROM purchases WHERE date IN (SELECT DISTINCT date 
+                        """SELECT purchase_price, quantity FROM purchases WHERE date IN (SELECT DISTINCT date 
                             FROM purchases
                             WHERE item_id = (SELECT id FROM items WHERE name = ?))
                             AND item_id = (SELECT id FROM items WHERE name = ?)""",
                         (Purchase[i].name, Purchase[i].name),
                     ).fetchall()
 
-                    # wap (weighted average price) function, to update an item value
-                    def wap(Prices):
-                        total_prices = []
-                        checked = []
-                        for p in range(len(Prices)):
-                            current_price = Prices[p][0]
-                            new_price = current_price
-                            n_times = 1
-                            if p != len(Prices) - 1:
-                                for j in range(p + 1, len(Prices), 1):
-                                    next_price = Prices[j]
-                                    if current_price == next_price:
-                                        n_times += 1
-                                        new_price = new_price + next_price
-
-                            if current_price not in checked:
-                                total_prices.append((new_price, n_times))
-                                checked.append(current_price)
-
-                        total_price_by_quantity = total_prices[0][0]
-                        quantities = total_prices[0][1]
-                        for p in range(1, len(total_prices)):
-                            total_price_by_quantity = (
-                                total_price_by_quantity + total_prices[p][0]
-                            )
-                            quantities = quantities + total_prices[p][1]
-
-                        wheighted_average = total_price_by_quantity / quantities
-                        return wheighted_average
-
                     # Update new purchase value of the item
                     database.execute(
                         "UPDATE items SET updated_price = ? WHERE name = ?",
                         (wap(prices), Purchase[i].name),
                     )
-                    # TODO: Use this value to check if the purchase can be made
                     # Update total purchase price
                     total_price += float(Purchase[i].subtotal)
 
@@ -482,20 +480,29 @@ def new_purchase():
                     return redirect(url_for("management.new_purchase"))
 
             # Calculate revenues, expenses
-            revenues = database.execute(
-                "SELECT SUM(quantity * amount) FROM sales"
-            ).fetchone()[0]
+            revenues = database.execute("SELECT revenues FROM balance").fetchone()[0]
             if not revenues:
                 revenues = 0
-            expenses = database.execute(
-                "SELECT SUM(quantity * purchase_price) FROM purchases"
-            ).fetchone()[0]
+            expenses = database.execute("SELECT expenses FROM balance").fetchone()[0]
             if not expenses:
                 expenses = 0
+
             # Check if there is registry and income greater than or equal to the total purchase price
-            if revenues - expenses < total_price:
+            income = database.execute("SELECT income FROM balance").fetchone()[0]
+            if income < total_price:
                 flash("There are insufficient funds to make this purchase")
                 return redirect(url_for("management.new_purchase"))
+
+            # Update balance table
+            new_expenses = expenses + total_price
+            new_income = revenues - new_expenses
+            database.execute(
+                "UPDATE balance SET expenses = ?, income = ? WHERE id = 1",
+                (
+                    new_expenses,
+                    new_income,
+                ),
+            )
 
             # Update product value (40% of profit)
             for item in range(len(Purchase)):

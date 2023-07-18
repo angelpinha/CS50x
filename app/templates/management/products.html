@@ -10,28 +10,36 @@ Products
 
   </header>
 
-  <div class="container-fluid">
-    <nav aria-label="breadcrumb">
-      <details role="list">
-        <summary aria-haspopup="listbox">Settings</summary>
-        <ul role="listbox">
-          <li><a href="/new_product">New product</a></li>
-          <li><a>Change product status</a></li>
-          <li><a href="/new_category">Create new category</a></li>
-        </ul>
-      </details>
-      <details role="list">
-        <summary aria-haspopup="listbox">Management Tools</summary>
-        <ul role="listbox">
-          <!--complete list and its general information: Priority, aggregate cost, sale value -->
-          <li><a>List of products</a></li>
-          <!--Rankings: select different filters based on top: units sold, point reviews, price-to-point ratio-->
-          <li><a>Rankings</a></li>
-          <li><a>Statistics</a></li>
-        </ul>
-      </details>
+  <div class="container">
+    <nav>
+
+      <div>
+        <a href="/new_product" class="container"><strong>New product</strong></a>
+      </div>
+
+      <hr>
+
+      <div>
+        <a href="/new_category" class="container"><strong>Create product category</strong></a>
+      </div>
+
+      <hr>
+
+      <div>
+        <a class="container outline secondary" data-tooltip="Feature in progress :)"><strong>List of
+            products</strong></a>
+      </div>
+
     </nav>
   </div>
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="/management" class="outline">Back to management</a></li>
+      </ul>
+    </nav>
+  </footer>
+
 </article>
 {% endblock %}
 
