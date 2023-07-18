@@ -1,4 +1,4 @@
-{% extends "management/management_layout.html" %}
+{% extends "layout.html" %}
 
 {% block title %}
 New Product
@@ -17,37 +17,52 @@ New Product
   </ul>
   {% endif %}
   {% endwith %}
-</article>
-<div class="container">
-  <div class="grid">
-    <label for="name">
-      <input autocomplete="off" id="name" placeholder="Product Name" type="text">
-    </label>
-    <label for="Category">
-      <select id="category">
-        <option value="" selected>Category</option>
-        {% for data in categories %}
-        <option>{{ data[0] }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <label for="sell_value">
-      <input id="sell_value" placeholder="Sell Value" type="text">
-    </label>
-    <label>
-      <input autocomplete="off" id="n_components" placeholder="N° of Components" type="text">
-      <button id="reset" disabled type="button">Reset</button>
-    </label>
-    <nav class="breadcrumb">
-      <form action="/new_product" method="post">
-        <button id="save_product" type="submit">Save new product</button>
-      </form>
-    </nav>
-    </label>
-  </div>
-  <div id="component_status"></div>
-  <ul class="container-fluid" id="components" role="listbox"></ul>
-</div>
 
+
+  <div id="to_send" class="container">
+
+    <div>Product Name</div>
+    <input autocomplete="off" id="name" placeholder="Product Name" type="text">
+
+    <div class="grid">
+      <label for="category">
+        Category
+        <select id="category">
+          <option value="" selected>Select category</option>
+          {% for data in categories %}
+          <option>{{ data[0] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label for="sell_value">
+        Sell value
+        <input id="sell_value" placeholder="Sell Value" type="text">
+      </label>
+      <label>
+        Number of components
+        <input autocomplete="off" id="n_components" placeholder="N° of Components" type="text">
+      </label>
+    </div>
+    <div class="grid">
+      <label>
+        <form action="/new_product" method="post">
+          <button id="save_product" type="submit">Save new product</button>
+          <button id="reset" disabled type="button" class="outline">Restore values</button>
+        </form>
+      </label>
+    </div>
+    <div>
+      <div id="component_status"></div>
+      <div class="container" id="components"></div>
+    </div>
+  </div>
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="/products" class="outline">Back to products</a></li>
+      </ul>
+    </nav>
+  </footer>
+</article>
 <script src="{{ url_for('static', filename='new_product.js') }}"></script>
 {% endblock %}

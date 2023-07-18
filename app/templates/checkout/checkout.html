@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
 
 {% block title %}
-New Sale
+Checkout
 {% endblock %}
 {% block header %}
 <article>
 	<header>
-		<h1>New Sale</h1>
+		<h1>Checkout</h1>
 	</header>
 	{% with messages = get_flashed_messages() %}
 	{% if messages %}
@@ -37,9 +37,11 @@ New Sale
 	</div>
 	<div class="grid">
 		<label for="quantity">
+			Quantity
 			<input id="quantity" placeholder="Quantity" autocomplete="off" type="number" min="0">
 		</label>
 		<label for="total">
+			Price by quantity
 			<input id="total" placeholder="$" autocomplete="off" type="text" readonly>
 		</label>
 	</div>
@@ -52,19 +54,25 @@ New Sale
 			<input hidden id="product_number" name="product_number">
 		</form>
 		<label for="restore_values">
-			<button id="restore_values" onclick="location.reload()" type="button">Cancel the Sale</button>
+			<button id="restore_values" onclick="location.reload()" type="button" class="outline">Cancel the Sale</button>
+		</label>
+	</nav>
+	<nav class="grid">
+		<label for="to_pay">
+			Total to pay
+			<input id="to_pay" placeholder="$" autocomplete="off" type="text" readonly>
 		</label>
 	</nav>
 	<table>
 		<thead>
 			<th>Product</th>
 			<th>Quantity</th>
-			<th>Total</th>
+			<th>Subtotals</th>
 		</thead>
 		<tbody id="ticket">
 		</tbody>
 	</table>
-	<script src="{{ url_for('static', filename='new_sale.js') }}"></script>
+	<script src="{{ url_for('static', filename='checkout.js') }}"></script>
 
 </div>
 

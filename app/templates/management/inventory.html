@@ -22,8 +22,8 @@ Inventory
 
     <div class="grid">
 
-      <label for="search-string">
-
+      <label for="search">
+        Item name
         <form action="/inventory" method="post">
           <input autocomplete="off" name="item" type="search" id="search" placeholder="Search">
           <button id="submit" type="submit">Search</button>
@@ -38,41 +38,41 @@ Inventory
 
       <script src="{{ url_for('static', filename= 'inventory.js') }}"></script>
 
-      <label for="filter">
-        <select id="condition" required>
-          <option value="Empty" selected>Filter</option>
-          <option>Name</option>
-          <option>Id</option>
-        </select>
-      </label>
-
     </div>
 
   </div>
-</article>
-{% endblock %}
 
-{% block main %}
+  {% endblock %}
 
-<main class="container">
-  <table role="grid">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Stored quantity</th>
-        <th>Unit</th>
-        <th>Purchase value</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in table %}
-      <tr>
-        {% for data in row %}
-        <td>{{ data }}</td>
+  {% block main %}
+
+  <main class="container">
+    <table role="grid">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Stored quantity</th>
+          <th>Unit</th>
+          <th>Purchase value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in table %}
+        <tr>
+          {% for data in row %}
+          <td>{{ data }}</td>
+          {% endfor %}
+        </tr>
         {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</main>
+      </tbody>
+    </table>
+  </main>
+  <footer>
+    <nav>
+      <ul>
+        <li><a href="/management" class="outline">Back to management</a></li>
+      </ul>
+    </nav>
+  </footer>
+</article>
 {% endblock %}

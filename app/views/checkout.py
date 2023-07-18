@@ -16,12 +16,6 @@ checkout = Blueprint("checkout", __name__)
 database = LocalProxy(get_db)
 
 
-@checkout.route("/checkout")
-@login_required
-def checkout_layout():
-    return render_template("checkout/checkout_layout.html")
-
-
 # product class to validate each product to be sold
 class Sell_product:
     def __init__(self, fields):
@@ -65,7 +59,7 @@ class Sell_product:
     # Total setter, to construct the total property of an instance
     @total.setter
     def total(self, total):
-        if not total or total.isnumeric() == False:
+        if not total or total.replace(".", "", 1).isnumeric() == False:
             raise NameError("Invalid total value")
         self._total = total
 
@@ -137,8 +131,8 @@ def new_sale():
             last_transaction_number = database.execute(
                 "SELECT MAX(transaction_number) FROM sales"
             ).fetchone()
-            if last_transaction_number:
-                new_transaction_number = last_transaction_number[0][0] + 1
+            if last_transaction_number[0]:
+                new_transaction_number = last_transaction_number[0] + 1
             else:
                 new_transaction_number = 1
             # Update sales table
@@ -153,8 +147,16 @@ def new_sale():
                         Products[product].total,
                     ),
                 )
+            revenues = database.execute("SELECT revenues FROM balance").fetchone()[0]
+            new_revenues = revenues + total_sale
+            expenses = database.execute("SELECT expenses FROM balance").fetchone()[0]
+            new_income = new_revenues - expenses
+            database.execute(
+                "UPDATE balance SET revenues = ?, income = ? WHERE id = 1",
+                (new_revenues, new_income),
+            )
             database.commit()
-            flash("Sale saved")
+            flash("Sale completed")
 
         return redirect(url_for("checkout.new_sale"))
-    return render_template("checkout/new_sale.html")
+    return render_template("checkout/checkout.html")

@@ -1,4 +1,4 @@
-{% extends "management/management_layout.html" %}
+{% extends "layout.html" %}
 
 {% block title %}
 New Supplier
@@ -17,31 +17,42 @@ New Supplier
 	</ul>
 	{% endif %}
 	{% endwith %}
-</article>
-<div class="container">
-	<aside>
-		<div>Supplier Name</div>
-		<input autocomplete="off" id="supplier_name" placeholder="Supplier" type="text">
-	</aside>
 
-	<select id="status">
-		<option value="" selected>Status</option>
-		{% for option in status %}
-		<option>{{ option }}</option>
-		{% endfor %}
-	</select>
-	<div class="grid">
-		<button style="height: 65px; line-height: 35px;" id="restore_values" onclick="location.reload()" type="button">
-			Restore values
-		</button>
-
-		<form action="/new_supplier" method="post">
-			<button disabled id="save_supplier" type="submit">Save Supplier</button>
-			<input hidden id="supplier_to_send" name="supplier">
-			<input hidden id="status_to_send" name="status">
-		</form>
+	<div class="container">
+		<aside>
+			<div>Supplier Name</div>
+			<input autocomplete="off" id="supplier_name" placeholder="Supplier" type="text">
+		</aside>
+		<label for="status">
+			Status
+			<select id="status">
+				<option value="" selected>Status</option>
+				{% for option in status %}
+				<option>{{ option }}</option>
+				{% endfor %}
+			</select>
+		</label>
+		<div class="grid">
+			<form action="/new_supplier" method="post">
+				<button disabled id="save_supplier" type="submit">Save Supplier</button>
+				<input hidden id="supplier_to_send" name="supplier">
+				<input hidden id="status_to_send" name="status">
+			</form>
+			<button style="height: 65px; line-height: 35px;" id="restore_values" onclick="location.reload()" type="button"
+				class="outline">
+				Restore values
+			</button>
+		</div>
 	</div>
-</div>
+
+	<footer>
+		<nav>
+			<ul>
+				<li><a href="/purchases" class="outline">Back to purchases</a></li>
+			</ul>
+		</nav>
+	</footer>
+</article>
 
 <script src="{{ url_for('static', filename = 'new_supplier.js') }}"></script>
 <script src="{{ url_for('static', filename = 'modal.js') }}"></script>

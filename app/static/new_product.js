@@ -99,23 +99,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
 				// Select element
 				const select = document.createElement('select');
+				select.id = `select_${i}`;
 
 				// Save button
 				const save_component = document.createElement('button');
 				save_component.setAttribute('type', 'button');
+				//save_component.setAttribute('class', 'secondary');
 				save_component.innerHTML = 'Save';
 
 				// Discard button
 				const discard_component = document.createElement('button');
-				discard_component.setAttribute('class', 'secondary');
+				discard_component.setAttribute('class', 'outline');
 				discard_component.setAttribute('type', 'button');
 				discard_component.innerHTML = 'Discard';
 
+				const div_component = document.createElement('div');
+				div_component.setAttribute("class", "grid");
+				const label_1 = document.createElement('label');
+				const label_2 = document.createElement('label');
+				const label_3 = document.createElement('label');
+				const label_4 = document.createElement('label');
 				// Append elements into the DOM
-				components.append(search);
-				components.append(select);
-				components.append(save_component);
-				components.append(discard_component);
+				label_1.append(search);
+				label_2.append(select);
+				label_3.append(save_component);
+				label_4.append(discard_component);
+
+				div_component.append(label_1, label_2, label_3, label_4);
+				components.append(div_component);
 
 				// Fetch names of components from back-end
 				search.addEventListener("input", async function () {
@@ -124,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
 						.then(response => response.json())
 						.then(data => {
 							let html = '';
-							let select = search.nextElementSibling;
+							let select = document.getElementById(`select_${i}`);
 
 							// Display results into select's element
 							for (let Name in data) {
@@ -133,13 +144,26 @@ document.addEventListener("DOMContentLoaded", () => {
 							}
 							select.innerHTML = html;
 
-							// Event handler of selected option 
+							// Selected option event handler
 							select.onclick = () => {
 								search.value = select.value.trim();
 
-								// Save component locally  
+								// Checking if the component is already in use
+								let found = false;
+								const keys = Object.keys(sessionStorage);
+
+								for (let i = 0; i < keys.length; i++) {
+									const key = keys[i];
+									if (sessionStorage.getItem(key) === search.value) {
+										found = true;
+										break;
+									}
+								}
+
+								// Save button event handler 
 								save_component.onclick = () => {
-									if (!sessionStorage.getItem(search.value)) {
+									// Save component locally
+									if (found === false) {
 										sessionStorage.setItem(`component${i+1}`, search.value);
 										document.querySelector('#component_status').textContent = 'Component Added.'
 										search.setAttribute("disabled", "true");
@@ -191,17 +215,19 @@ document.addEventListener("DOMContentLoaded", () => {
 												document.querySelector('form').append(values_to_send);
 											}
 										}
+									} else {
+										alert("Component already in use");
 									}
-								};
-								// Remove component locally
-								discard_component.onclick = () => {
-									if (sessionStorage.getItem(search.value)) {
-										search.removeAttribute("disabled");
-										select.removeAttribute("disabled");
-										sessionStorage.removeItem(search.value);
-										document.querySelector('#save_product').setAttribute('disabled', 'true');
-										document.querySelector('#component_status').textContent = 'Select Component';
-									}
+									// Remove component locally
+									discard_component.onclick = () => {
+										if (sessionStorage.getItem(`component${i+1}`)) {
+											search.removeAttribute("disabled");
+											select.removeAttribute("disabled");
+											sessionStorage.removeItem(`component${i+1}`);
+											document.querySelector('#save_product').setAttribute('disabled', 'true');
+											document.querySelector('#component_status').textContent = 'Select Component';
+										}
+									};
 								};
 
 							};
