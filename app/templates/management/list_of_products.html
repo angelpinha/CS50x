@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+
+{% block title %}
+List of Products
+{% endblock %}
+{% block header %}
+<article>
+	<header>
+		<h1>List of Products</h1>
+	</header>
+	{% with messages = get_flashed_messages() %}
+	{% if messages %}
+	<ul class="flashes container">
+		{% for message in messages %}
+		<li style="list-style-type:none;"><strong><mark>{{ message }}</mark></strong></li>
+		{% endfor %}
+	</ul>
+	{% endif %}
+	{% endwith %}
+
+	<div class="container">
+
+		<div class="grid">
+
+			<label for="search">
+				Product name
+				<form action="/list_of_products" method="post">
+					<input autocomplete="off" name="product" type="search" id="search" placeholder="Search">
+					<button id="submit" type="submit">Search</button>
+				</form>
+
+				<details open>
+					<summary aria-haspopup="listbox">Results</summary>
+					<ul id="options" role="listbox"></ul>
+				</details>
+
+			</label>
+
+			<script src="{{ url_for('static', filename= 'list_of_products.js') }}"></script>
+
+		</div>
+
+	</div>
+
+	{% endblock %}
+
+	{% block main %}
+
+	<main class="container">
+		<table role="grid">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Category</th>
+					<th>Price</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for row in table %}
+				<tr>
+					{% for data in row %}
+					<td>{{ data }}</td>
+					{% endfor %}
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</main>
+	<footer>
+		<nav>
+			<ul>
+				<li><a href="/management" class="outline">Back to management</a></li>
+			</ul>
+		</nav>
+	</footer>
+</article>
+{% endblock %}

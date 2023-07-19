@@ -61,6 +61,29 @@ def products():
     return render_template("management/products.html")
 
 
+@management.route("/list_of_products", methods=["GET", "POST"])
+@login_required
+def list_of_products():
+    if request.method == "POST":
+        product = request.form.get("product")
+
+        if product:
+            table = database.execute(
+                """SELECT description, category, ROUND(price, 2) AS price
+                    FROM products
+                    WHERE description = ?""",
+                (product,),
+            ).fetchall()
+            # Return the item typed in search
+            return render_template("management/list_of_products.html", table=table)
+
+    table = database.execute(
+        """SELECT description, category, ROUND(price, 2) AS price FROM products LIMIT 10"""
+    ).fetchall()
+    # Return a general list of items
+    return render_template("management/list_of_products.html", table=table)
+
+
 @management.route("/new_product", methods=["GET", "POST"])
 @login_required
 def new_product():
@@ -74,11 +97,11 @@ def new_product():
 
         # Product components
         for i in range(int(request.form.get("quantity")) - 3):
-            PRODUCT[f"component_{i+1}"] = request.form.get(f"component{i+1}")
-            for j in range(i):
-                if PRODUCT[f"component_{i+1}"] == PRODUCT[f"component_{j+1}"]:
-                    flash("The same item cannot be used twice")
-                    return redirect(url_for("management.new_product"))
+            if request.form.get(f"component{i+1}") in PRODUCT.values():
+                flash("The same item cannot be used twice")
+                return redirect(url_for("management.new_product"))
+            else:
+                PRODUCT[f"component_{i+1}"] = request.form.get(f"component{i+1}")
 
             # Ensure item isn't already in use
             if PRODUCT[f"component_{i+1}"]:
@@ -347,7 +370,7 @@ class Purchase_item:
     # unit value setter, to return the unit_value property of an instance
     @unit_value.setter
     def unit_value(self, unit_value):
-        if not unit_value or unit_value.isnumeric() == False:
+        if not unit_value or unit_value.replace(".", "", 1).isnumeric() == False:
             raise NameError("Failed to provide valid unit value")
         self._unit_value = unit_value
 

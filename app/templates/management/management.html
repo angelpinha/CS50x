@@ -42,14 +42,79 @@ Management
     </div>
 
   </div>
+  </div>
+
+  <!-- Modal -->
+  <dialog id="explanation">
+    <article>
+      <a href="#close" aria-label="Close" class="close" data-target="explanation" onClick="toggleModal(event)">
+      </a>
+      <h3>First Start in the use of the management system</h3>
+      <p>
+        <strong><i>To take advantage of the use of this tool, there are a few steps to follow:</i></strong>
+      </p>
+      <h6>1. Create items and its attributes.</h6>
+      <p>
+        To create an item, go to the <strong>"Items"</strong> view and click the <strong>"Create new item"</strong>
+        button.
+        Enter the item's name, cost center, format (in numbers), unit of measurement and the format value. Then, click
+        on
+        <strong>"Save new item"</strong>.
+      </p>
+      <p>
+        Make sure to add all items required for a product that you will create later. Once you have created them,
+        they will be saved in the inventory. You can view the inventory at any time by going to the
+        <strong>"Inventory"</strong>
+        view.
+      </p>
+      <h6>2. Create a category of product and then create a new product that correspond to its category.</h6>
+      <p>
+        To create a category, go to the <strong>"Products"</strong> view and click the <strong>"Create product
+          category"</strong>
+        button. You only need to enter the category's name and save it.
+      </p>
+      <p>
+        Once you have created the category, you can create new products that belong to that category. To do this,
+        go to the <strong>"Products"</strong> view and click the <strong>"New product"</strong> button. Enter the
+        product's name, a category that you have previously created, an initial sell value and the number of components
+        that will have.
+      </p>
+      <h6>3. Add a new supplier and then make a purchase of products.</h6>
+      <p>
+        To add a new supplier, go to the <strong>"Purchases"</strong> view and click the <strong>"New supplier"</strong>
+        button. Enter the supplier's name and status.
+      </p>
+      <p>
+        Once you have added a supplier, you can make a purchase of products from them. To do this, go to the
+        <strong>"Purchases"</strong> view and click the new purchase button. Select the supplier from the
+        <strong>"Supplier name"</strong> field, enter the invoice's number and reception date. Clicking the
+        <strong>"Add an item"</strong> button you can enter an item at a time.
+      </p>
+      <p>Finally, you can start recording sales in the <strong>"Checkout" view</strong>.</p>
+
+      <footer>
+        <a href="#confirm" role="button" data-target="explanation" onClick="toggleModal(event)">
+          <strong>Understood</strong>
+        </a>
+      </footer>
+    </article>
+  </dialog>
 
   <footer>
-    <nav>
+    <nav class="container-fluid">
       <ul>
         <li><a href="/management" class="outline">Back to management</a></li>
+      </ul>
+      <ul>
+        <li><button role="button" class="outline" data-target="explanation" onClick="toggleModal(event)">
+            <strong>General instructions</strong>
+          </button></li>
       </ul>
     </nav>
   </footer>
 
 </article>
+{% endblock %}
+{% block modal %}
+<script src="{{ url_for('static', filename = 'modal.js') }}"></script>
 {% endblock %}
