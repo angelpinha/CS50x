@@ -41,3 +41,15 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+@media only screen and (max-width: 576px) {
+  .display-desktop {
+    display: None;
+  }
+}
+
+@media only screen and (min-width: 576px) {
+  .display-mobile {
+    display: None;
+  }
+}

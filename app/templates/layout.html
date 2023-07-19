@@ -11,23 +11,47 @@
 </head>
 
 <body>
-  <nav class="container-fluid">
+  <nav class="container-fluid display-desktop">
     <ul>
       <li>
         <a href="/" class="primary">
           <img src="{{ url_for('static', filename='icon.png') }}" alt="Logo">
         </a>
-      <li>
+      </li>
     </ul>
+    {% if session["user_id"] %}
     <ul>
-      {% if session["user_id"] %}
       <li><a href="/new_sale" class="secondary">Checkout</a></li>
       <li><a href="/management" class="secondary">Management</a></li>
-      <li><a href="/about" class="secondary">About</a></li>
       <li><a href="/profile" class="secondary">Profile</a></li>
       <li><a href="/logout" class="outline"><strong>Log out</strong></a></li>
-      {% endif %}
     </ul>
+    {% endif %}
+  </nav>
+
+  <nav class="container-fluid display-mobile">
+    <ul>
+      <li>
+        <a href="/" class="primary">
+          <img src="{{ url_for('static', filename='icon.png') }}" alt="Logo">
+        </a>
+      </li>
+    </ul>
+    {% if session["user_id"] %}
+    <ul>
+      <li>
+        <details role="list" dir="rtl">
+          <summary aria-haspopup="listbox" role="link"><strong>Menu</strong></summary>
+          <ul role="listbox">
+            <li><a href="/new_sale" class="secondary">Checkout</a></li>
+            <li><a href="/management" class="secondary">Management</a></li>
+            <li><a href="/profile" class="secondary">Profile</a></li>
+            <li><a href="/logout" class="outline"><strong>Log out</strong></a></li>
+          </ul>
+      </li>
+    </ul>
+    {% endif %}
+
   </nav>
 
   <hr>
