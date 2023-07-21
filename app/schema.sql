@@ -27,6 +27,7 @@ CREATE TABLE "suppliers" (
 
 CREATE TABLE "products" (
 	"id"	INTEGER NOT NULL UNIQUE,
+	"item_id" TEXT NOT NULL,
 	"description"	TEXT NOT NULL,
 	"price"	REAL NOT NULL,
 	"category" TEXT NOT NULL,

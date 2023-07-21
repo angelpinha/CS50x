@@ -84,6 +84,18 @@ def list_of_products():
     return render_template("management/list_of_products.html", table=table)
 
 
+# Process each product to enter it in the database
+def product_deconstructor(P):
+    result = [P["name"]]
+    placeholder = ""
+    for key, value in P.items():
+        if re.search("component", key):
+            result.append(value)
+            placeholder += "?,"
+    result.append(placeholder[:-1])
+    return tuple(result)
+
+
 @management.route("/new_product", methods=["GET", "POST"])
 @login_required
 def new_product():
@@ -95,27 +107,7 @@ def new_product():
             "sell_value": request.form.get("VALUE"),
         }
 
-        # Product components
-        for i in range(int(request.form.get("quantity")) - 3):
-            if request.form.get(f"component{i+1}") in PRODUCT.values():
-                flash("The same item cannot be used twice")
-                return redirect(url_for("management.new_product"))
-            else:
-                PRODUCT[f"component_{i+1}"] = request.form.get(f"component{i+1}")
-
-            # Ensure item isn't already in use
-            if PRODUCT[f"component_{i+1}"]:
-                item_ocupied = database.execute(
-                    "SELECT product_id FROM items WHERE name = ?",
-                    (PRODUCT[f"component_{i+1}"],),
-                ).fetchone()
-                if item_ocupied[0] != None:
-                    flash(
-                        f"One of the items selected is in use already: {PRODUCT[f'component_{i+1}']}"
-                    )
-                    return redirect(url_for("management.new_product"))
-
-        # Ensure product doesn't exist yet
+        # Ensure valid product name and product name doesn't exist yet
         if PRODUCT["name"]:
             name_ocupied = database.execute(
                 "SELECT description FROM products WHERE description = ?",
@@ -124,24 +116,45 @@ def new_product():
             if name_ocupied:
                 flash("The name provided is already in use")
                 return redirect(url_for("management.new_product"))
+        else:
+            flash("Failed to provide a product name")
+            return redirect(url_for("management.new_product"))
 
+        # Take the product components and make sure they are not duplicated
+        for i in range(int(request.form.get("quantity"))):
+            if request.form.get(f"component{i+1}") in PRODUCT.values():
+                flash("The same item cannot be used twice")
+                return redirect(url_for("management.new_product"))
+            else:
+                PRODUCT[f"component_{i+1}"] = request.form.get(f"component{i+1}")
+
+        # Take the items ids and convert them into string
+        item_ids = []
+        result = database.execute(
+            f"SELECT name, id FROM items WHERE name IN ({product_deconstructor(PRODUCT)[-1]})",
+            product_deconstructor(PRODUCT)[1:-1],
+        ).fetchall()
+        for row in range(len(result)):
+            item_ids.append(str(result[row][1]))
+        ids_to_save = ", ".join(item_ids)
+
+        # Ensuring valid product category and sell value
         if PRODUCT["category"] and PRODUCT["sell_value"]:
+            # Save new product in the database
             database.execute(
-                "INSERT INTO products (description, price, category) VALUES (?, ?, ?)",
-                (PRODUCT["name"], PRODUCT["sell_value"], PRODUCT["category"]),
+                "INSERT INTO products (item_id, description, price, category) VALUES (?, ?, ?, ?)",
+                (
+                    ids_to_save,
+                    PRODUCT["name"],
+                    PRODUCT["sell_value"],
+                    PRODUCT["category"],
+                ),
             )
+        else:
+            flash("Failed to provide one of these fields: category, sell value")
+            return redirect(url_for("management.new_product"))
 
-        # Process each product to enter it in the database
-        def product_deconstructor(P):
-            result = [P["name"]]
-            placeholder = ""
-            for key, value in P.items():
-                if re.search("component", key):
-                    result.append(value)
-                    placeholder += "?,"
-            result.append(placeholder[:-1])
-            return tuple(result)
-
+        # Save product id into items table
         database.execute(
             f"""UPDATE items
             SET product_id = (SELECT id FROM products WHERE description = ?)
@@ -326,6 +339,34 @@ def purchases():
     return render_template("management/purchases.html")
 
 
+@management.route("/purchases_history", methods=["GET", "POST"])
+@login_required
+def purchases_history():
+    if request.method == "POST":
+        supplier = request.form.get("supplier")
+
+        if supplier:
+            table = database.execute(
+                """SELECT date, supplier_name, invoice_number, name, quantity, unit, ROUND(purchase_price, 2)
+                    AS price, ROUND(purchase_price * quantity, 2) as total
+                    FROM suppliers, purchases, items
+                    WHERE suppliers.id = purchases.supplier_id AND purchases.item_id = items.id
+                    AND supplier_name = ?""",
+                (supplier,),
+            ).fetchall()
+            # Return the purchase info typed in search
+            return render_template("management/purchases_history.html", table=table)
+
+    table = database.execute(
+        """SELECT date, supplier_name, invoice_number, name, quantity, unit , ROUND(purchase_price, 2)
+            AS price, ROUND(purchase_price * quantity, 2) as total
+            FROM suppliers, purchases, items
+            WHERE suppliers.id = purchases.supplier_id AND purchases.item_id = items.id LIMIT 10"""
+    ).fetchall()
+    # Return a general list of purchases
+    return render_template("management/purchases_history.html", table=table)
+
+
 # Item class to validate a purchase
 class Purchase_item:
     def __init__(self, fields):
@@ -421,6 +462,17 @@ def new_purchase():
                 flash(f"Invalid {key}")
         if validation > 0:
             flash("Failed to provide invoice info")
+            return redirect(url_for("management.new_purchase"))
+
+        supplier_status = database.execute(
+            "SELECT status FROM suppliers WHERE supplier_name = ?",
+            (Invoice_info["Supplier name"],),
+        ).fetchone()
+
+        if supplier_status[0] == "Inactive":
+            flash(
+                "Supplier status is 'inactive', For more information check with your supervisor"
+            )
             return redirect(url_for("management.new_purchase"))
 
         exist_invoice_number = database.execute(
@@ -556,12 +608,13 @@ def invoices():
     return render_template("management/invoices.html")
 
 
+# Global list of supplier status
+STATUS = ["Active", "Inactive"]
+
+
 @management.route("/new_supplier", methods=["GET", "POST"])
 @login_required
 def new_supplier():
-    # Global list of supplier status
-    STATUS = ["Active", "Inactive"]
-
     if request.method == "POST":
         supplier = request.form.get("supplier")
         status = request.form.get("status")
@@ -589,3 +642,33 @@ def new_supplier():
         return redirect(url_for("management.new_supplier"))
 
     return render_template("management/new_supplier.html", status=STATUS)
+
+
+@management.route("/supplier_status", methods=["GET", "POST"])
+@login_required
+def supplier_status():
+    if request.method == "POST":
+        supplier = request.form.get("supplier")
+        status = request.form.get("status")
+        # Check if supplier already exists
+        if supplier:
+            existing_supplier = database.execute(
+                "SELECT supplier_name FROM suppliers WHERE supplier_name = ?",
+                (supplier,),
+            ).fetchone()
+        else:
+            flash("Failed to provide valid supplier name")
+            return redirect(url_for("management.supplier_status"))
+
+        if existing_supplier:
+            if status and status in STATUS:
+                database.execute(
+                    "UPDATE suppliers SET status = ? WHERE supplier_name = ?",
+                    (status, supplier),
+                )
+                database.commit()
+                flash("Status changed successfully")
+            else:
+                flash("Invalid status")
+                return redirect(url_for("management.supplier_status"))
+    return render_template("management/supplier_status.html", status=STATUS)

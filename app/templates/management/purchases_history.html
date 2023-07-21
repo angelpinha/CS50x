@@ -1,12 +1,12 @@
 {% extends "layout.html" %}
 
 {% block title %}
-List of Products
+Purchases History
 {% endblock %}
 {% block header %}
 <article>
 	<header>
-		<h1>List of Products</h1>
+		<h1>Purchases History</h1>
 	</header>
 	{% with messages = get_flashed_messages() %}
 	{% if messages %}
@@ -23,9 +23,9 @@ List of Products
 		<div class="grid">
 
 			<label for="search">
-				Product name
-				<form action="/list_of_products" method="post">
-					<input autocomplete="off" name="product" type="search" id="search" placeholder="Search">
+				Supplier name
+				<form action="/purchases_history" method="post">
+					<input autocomplete="off" name="supplier" type="search" id="search" placeholder="Search">
 					<button id="submit" type="submit">Search</button>
 				</form>
 
@@ -50,9 +50,14 @@ List of Products
 		<table role="grid">
 			<thead>
 				<tr>
-					<th>Name</th>
-					<th>Category</th>
-					<th>Price</th>
+					<th>Date</th>
+					<th>Supplier</th>
+					<th>Invoice Number</th>
+					<th>Item</th>
+					<th>Quantity</th>
+					<th>Unit</th>
+					<th>Unit Price</th>
+					<th>Total</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -69,10 +74,10 @@ List of Products
 	<footer>
 		<nav>
 			<ul>
-				<li><a href="/products" class="outline">Back to Products</a></li>
+				<li><a href="/management" class="outline">Back to Management</a></li>
 			</ul>
 		</nav>
 	</footer>
-	<script src="{{ url_for('static', filename= 'list_of_products.js') }}"></script>
+	<script src="{{ url_for('static', filename= 'supplier.js') }}"></script>
 </article>
 {% endblock %}
