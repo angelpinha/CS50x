@@ -192,29 +192,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
 											const quantity = document.createElement('input');
 											quantity.setAttribute('name', 'quantity');
-											quantity.setAttribute('value', length);
 											quantity.setAttribute('class', 'to_send');
 											quantity.setAttribute('hidden', 'true');
-											document.querySelector('form').append(quantity);
 
-											// Iterate over session storage
+											// POSSIBLE BUG
+											// Iterate over session storage keys
+											let componentNumber = 0;
 											for (let i = 0; i < length; i++) {
-
-												const values_to_send = document.createElement('input');
 												const key = sessionStorage.key(i);
 												const value = sessionStorage.getItem(key);
+												const regularExpression = new RegExp('component');
+												if (regularExpression.test(key)) {
+													componentNumber++;
 
-												values_to_send.setAttribute('class', 'to_send');
-												values_to_send.setAttribute('value', value);
-												values_to_send.setAttribute('hidden', 'true');
-												if (key === 'NAME' || key === 'CATEGORY' || key === 'VALUE') {
-													values_to_send.setAttribute('name', key);
-												} else {
-													values_to_send.setAttribute('name', `component${i}`);
+													const components_to_send = document.createElement('input');
+													components_to_send.setAttribute('class', 'to_send');
+													components_to_send.setAttribute('name', key);
+													components_to_send.setAttribute('value', sessionStorage.getItem(key));
+													components_to_send.setAttribute('hidden', 'true');
+													document.querySelector('form').append(components_to_send);
 												}
-												document.querySelector('form').append(values_to_send);
+
+												// Set name of each form input
+												else if (key === 'NAME' || key === 'CATEGORY' || key === 'VALUE') {
+													const values_to_send = document.createElement('input');
+													values_to_send.setAttribute('class', 'to_send');
+													values_to_send.setAttribute('value', value);
+													values_to_send.setAttribute('hidden', 'true');
+													values_to_send.setAttribute('name', key);
+													document.querySelector('form').append(values_to_send);
+												} //else {
+												//values_to_send.setAttribute('name', `component${i}`);
+												//}
 											}
+											quantity.setAttribute('value', componentNumber);
+											document.querySelector('form').append(quantity);
 										}
+
 									} else {
 										alert("Component already in use");
 									}
