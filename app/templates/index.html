@@ -4,12 +4,6 @@
 Home
 {% endblock %}
 
-{% block header %}
-<h1>Home:</h1>
-<p><i>This is a place to locate the homepage</i></p>
-<hr>
-{% endblock %}
-
 {% block main %}
 <article>
   <header>
@@ -17,49 +11,58 @@ Home
       IMS Application
     </h2>
   </header>
-  <p>
-    We are excited to present our final project for CS50, a web application called IMS,
-    which stands for Inventory Management Software.
-  </p>
-  <hr>
-  <p>
-    IMS is a web application written in Python with the Flask framework.
-    It features authentication and management systems.
-    The functionality of the authentication system includes:
-  </p>
-  <ul>
-    <li>Registering a new user.</li>
-    <li>Logging in and out of the system.</li>
-    <li>Changing your username and password.</li>
-    <li>Setting up two-factor authentication.</li>
-    <li>Recovering your account if you forget your password.</li>
-  </ul>
-  <p>
-    In addition, the software includes a set of functionalities that allow users to configure
-    and initialize a management system based on cost center. Users can:
-  </p>
-  <ul>
-    <li>Create items and products.</li>
-    <li>Store supplier information.</li>
-    <li>Add new suppliers.</li>
-    <li>Register new purchases.</li>
-    <li>Register sales.</li>
-  </ul>
-  <p>
-    The application enables management of raw materials, components, and finished products, as well
-    as evaluation of an elementary financial state of business performance.
-  </p>
-  <hr>
-  <p>
-    The front-end was written with a minimal CSS framework called Pico CSS which helped us to create
-    a consistent visual language across the application. This allowed us to focus primarily on developing
-    the back-end of the software.
-  </p>
-  <p>
-    We are really proud of the work that we have done on IMS and we hope that you find it useful.
-  </p>
-  <h6>
-    <strong>And this was CS50!</strong>
-  </h6>
+  <div class="container">
+    <p>
+      <strong>Hello World!</strong>
+    </p>
+    <p>
+      We are excited to present our final project for <strong>CS50</strong>, a web application called IMS,
+      which stands for Inventory Management Software.
+    </p>
+    <p>
+      IMS is a web application written in Python with the Flask framework.
+      It features authentication and management systems.
+      The functionality of the authentication system includes:
+    </p>
+    <ul>
+      <li>Registering a new user.</li>
+      <li>Logging in and out of the system.</li>
+      <li>Changing your username and password.</li>
+      <li>Setting up two-factor authentication.</li>
+      <li>Recovering your account if you forget your password.</li>
+    </ul>
+    <p>
+      In addition, the software includes a set of functionalities that allow users to configure
+      and initialize a management system based on cost center. Users can:
+    </p>
+    <ul>
+      <li>Create items and products.</li>
+      <li>Store supplier information.</li>
+      <li>Add new suppliers.</li>
+      <li>Register new purchases.</li>
+      <li>Register sales.</li>
+    </ul>
+    <p>
+      The application enables management of raw materials, components, and finished products, as well
+      as evaluation of an elementary financial state of business performance.
+    </p>
+    <p>
+      The front-end was written with a minimal CSS framework called Pico CSS which helped us to create
+      a consistent visual language across the application. This allowed us to focus primarily on developing
+      the back-end of the software.
+    </p>
+    <p>
+      We are really proud of the work that we have done on IMS and we hope that you find it useful.
+    </p>
+    <p>
+      <strong>And this was CS50!</strong>
+    </p>
+  </div>
+  <footer>
+    <small>Made by
+      <a class="primary" target="_blank" href="https://github.com/angelpinha">Angel Piña</a> &
+      <a class="primary" target="_blank" href="https://github.com/nureddyn">Nureddyn Ballout</a>
+    </small>
+  </footer>
 </article>
 {% endblock %}
