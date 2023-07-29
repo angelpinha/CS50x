@@ -17,63 +17,62 @@ Checkout
 	</ul>
 	{% endif %}
 	{% endwith %}
+	<div class="container">
+		<div class="grid">
+			<label for="search">
+				Search Product
+				<input autocomplete="off" id="name" placeholder="Product" type="search">
+			</label>
+			<label for="Product">
+				Product Options
+				<select id="product_options">
+					<option value="" selected>Select</option>
+				</select>
+			</label>
+			<label for="unit_price">
+				Unit Price
+				<input id="unit_price" placeholder="$" type="text" readonly>
+			</label>
+		</div>
+		<div class="grid">
+			<label for="quantity">
+				Quantity
+				<input id="quantity" placeholder="Quantity" autocomplete="off" type="number" min="0">
+			</label>
+			<label for="total">
+				Price by quantity
+				<input id="total" placeholder="$" autocomplete="off" type="text" readonly>
+			</label>
+		</div>
+		<nav class="grid">
+			<label for="save_product">
+				<button id="save_product" type="button">Add to ticket</button>
+			</label>
+			<form action="/new_sale" method="post">
+				<button id="check_out" type="submit">Check Out</button>
+				<input hidden id="product_number" name="product_number">
+			</form>
+			<label for="restore_values">
+				<button id="restore_values" onclick="location.reload()" type="button" class="outline">Cancel the Sale</button>
+			</label>
+		</nav>
+		<nav class="grid">
+			<label for="to_pay">
+				Total to pay
+				<input id="to_pay" placeholder="$" autocomplete="off" type="text" readonly>
+			</label>
+		</nav>
+		<table>
+			<thead>
+				<th>Product</th>
+				<th>Quantity</th>
+				<th>Subtotals</th>
+			</thead>
+			<tbody id="ticket">
+			</tbody>
+		</table>
+		<script src="{{ url_for('static', filename='checkout.js') }}"></script>
+	</div>
 </article>
-<div class="container-fluid">
-	<div class="grid">
-		<label for="search">
-			Search Product
-			<input autocomplete="off" id="name" placeholder="Product" type="search">
-		</label>
-		<label for="Product">
-			Product Options
-			<select id="product_options">
-				<option value="" selected>Select</option>
-			</select>
-		</label>
-		<label for="unit_price">
-			Unit Price
-			<input id="unit_price" placeholder="$" type="text" readonly>
-		</label>
-	</div>
-	<div class="grid">
-		<label for="quantity">
-			Quantity
-			<input id="quantity" placeholder="Quantity" autocomplete="off" type="number" min="0">
-		</label>
-		<label for="total">
-			Price by quantity
-			<input id="total" placeholder="$" autocomplete="off" type="text" readonly>
-		</label>
-	</div>
-	<nav class="grid">
-		<label for="save_product">
-			<button id="save_product" type="button">Add to ticket</button>
-		</label>
-		<form action="/new_sale" method="post">
-			<button id="check_out" type="submit">Check Out</button>
-			<input hidden id="product_number" name="product_number">
-		</form>
-		<label for="restore_values">
-			<button id="restore_values" onclick="location.reload()" type="button" class="outline">Cancel the Sale</button>
-		</label>
-	</nav>
-	<nav class="grid">
-		<label for="to_pay">
-			Total to pay
-			<input id="to_pay" placeholder="$" autocomplete="off" type="text" readonly>
-		</label>
-	</nav>
-	<table>
-		<thead>
-			<th>Product</th>
-			<th>Quantity</th>
-			<th>Subtotals</th>
-		</thead>
-		<tbody id="ticket">
-		</tbody>
-	</table>
-	<script src="{{ url_for('static', filename='checkout.js') }}"></script>
-
-</div>
 
 {% endblock %}
