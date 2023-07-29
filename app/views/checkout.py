@@ -87,9 +87,9 @@ def new_sale():
                     Products[i] = Sell_product(Products[i])
                     # Check if there is enough quantity of the product to sell
                     items_quantity = database.execute(
-                        """SELECT name, stored_quantity
-                        FROM items INNER JOIN inventory
-                        ON items.id = inventory.item_id
+                        """SELECT name, stored_quantity, recipe.quantity
+                        FROM items, inventory, recipe
+                        ON items.id = inventory.item_id AND items.id = recipe.item_id
                         WHERE items.name IN (SELECT name FROM items
                         WHERE product_id IN (SELECT id FROM products WHERE description = ?))""",
                         (Products[i].name,),
@@ -97,11 +97,12 @@ def new_sale():
                     # Check if there is enough quantity of items to sell
                     not_enough = 0
                     for item in range(len(items_quantity)):
-                        if items_quantity[item][1] < int(Products[i].quantity):
+                        if items_quantity[item][1] < items_quantity[item][2]:
                             not_enough += 1
                             flash(
-                                f"""Not enough {items_quantity[item][0]} ({items_quantity[item][1]})
-                                for {Products[i].name} ({Products[i].quantity})"""
+                                f""" Product {Products[i].name} not available:
+                                Not enough {items_quantity[item][0]}: {items_quantity[item][1]} stored
+                                and {items_quantity[item][2] * float(Products[i].quantity)} required"""
                             )
                     if not_enough == 0:
                         # Update quantity of each item of the current product
@@ -117,7 +118,7 @@ def new_sale():
                             FROM inventory WHERE item_id = ?) - ? WHERE item_id = ?""",
                                 (
                                     items_id[row][0],
-                                    Products[i].quantity,
+                                    items_quantity[row][2] * float(Products[i].quantity),
                                     items_id[row][0],
                                 ),
                             )

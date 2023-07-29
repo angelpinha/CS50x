@@ -52,6 +52,16 @@ CREATE TABLE "items" (
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
 
+CREATE TABLE "recipe" (
+	"id" INTEGER NOT NULL UNIQUE,
+	"product_id" INTEGER,
+	"item_id" INTEGER,
+	"quantity" REAL NOT NULL,
+	FOREIGN KEY("product_id") REFERENCES "products"("id"),
+	FOREIGN KEY("item_id") REFERENCES "items"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
+
 CREATE TABLE "inventory" (
 	"item_id"	INTEGER,
 	"initial_quantity"	INTEGER NOT NULL,
