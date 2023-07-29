@@ -27,7 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
 		} else {
 			document.querySelector('#save_product').setAttribute("disabled", "true");
 		}
-		if (sessionStorage.getItem('NAME') && sessionStorage.getItem('NAME').length > 0) {
+		if (sessionStorage.getItem('NAME') && sessionStorage.getItem('NAME').length > 0 &&
+			isNaN(sessionStorage.getItem('NAME')) &&
+			sessionStorage.getItem('CATEGORY') && sessionStorage.getItem('CATEGORY').length > 0 &&
+			sessionStorage.getItem('VALUE') && sessionStorage.getItem('VALUE').length > 0 &&
+			!isNaN(sessionStorage.getItem('VALUE'))) {
 			N_components.removeAttribute('disabled');
 		} else {
 			N_components.setAttribute('disabled', 'true');
@@ -35,13 +39,17 @@ document.addEventListener("DOMContentLoaded", () => {
 	};
 
 	// Force to give a category
-	document.querySelector("#category").onkeyup = () => {
+	document.querySelector("#category").onclick = () => {
 		if (document.querySelector("#category").value.length > 0 && sessionStorage.length > 3) {
 			document.querySelector('#save_product').removeAttribute("disabled");
 		} else {
 			document.querySelector('#save_product').setAttribute("disabled", "true");
 		}
-		if (sessionStorage.getItem('CATEGORY') && sessionStorage.getItem('CATEGORY').length > 0) {
+		if (sessionStorage.getItem('NAME') && sessionStorage.getItem('NAME').length > 0 &&
+			isNaN(sessionStorage.getItem('NAME')) &&
+			sessionStorage.getItem('CATEGORY') && sessionStorage.getItem('CATEGORY').length > 0 &&
+			sessionStorage.getItem('VALUE') && sessionStorage.getItem('VALUE').length > 0 &&
+			!isNaN(sessionStorage.getItem('VALUE'))) {
 			N_components.removeAttribute('disabled');
 		} else {
 			N_components.setAttribute('disabled', 'true');
@@ -55,7 +63,11 @@ document.addEventListener("DOMContentLoaded", () => {
 		} else {
 			document.querySelector('#save_product').setAttribute("disabled", "true");
 		}
-		if (sessionStorage.getItem('VALUE') && sessionStorage.getItem('VALUE').length > 0) {
+		if (sessionStorage.getItem('NAME') && sessionStorage.getItem('NAME').length > 0 &&
+			isNaN(sessionStorage.getItem('NAME')) &&
+			sessionStorage.getItem('CATEGORY') && sessionStorage.getItem('CATEGORY').length > 0 &&
+			sessionStorage.getItem('VALUE') && sessionStorage.getItem('VALUE').length > 0 &&
+			!isNaN(sessionStorage.getItem('VALUE'))) {
 			N_components.removeAttribute('disabled');
 		} else {
 			N_components.setAttribute('disabled', 'true');
@@ -70,8 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		// Ensuring user types a number, and five is the maximum number of components
 		if (N_components.value.length > 0 && N_components.value <= 5 && !N_components.value.includes(' ')) {
-			document.querySelector('#component_status').textContent = 'Select Component';
-
 			// Enable reset button
 			document.querySelector('#reset').removeAttribute("disabled");
 
@@ -89,6 +99,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 			// Prevent from change number of components without reset values
 			N_components.setAttribute("disabled", "true");
+			document.querySelector("#category").setAttribute("disabled", "true");
+			document.querySelector("#sell_value").setAttribute("disabled", "true");
 
 			// Create fields of components, according to number provided earlier
 			for (let i = 0; i < parseInt(N_components.value); i++) {
@@ -100,6 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
 				// Select element
 				const select = document.createElement('select');
 				select.id = `select_${i}`;
+
+				// Recipe quantity element
+				const recipe = document.createElement('input');
+				recipe.setAttribute("placeholder", "Recipe");
+				recipe.id = `recipe${i}`;
 
 				// Save button
 				const save_component = document.createElement('button');
@@ -119,13 +136,16 @@ document.addEventListener("DOMContentLoaded", () => {
 				const label_2 = document.createElement('label');
 				const label_3 = document.createElement('label');
 				const label_4 = document.createElement('label');
+				const label_5 = document.createElement('label');
+
 				// Append elements into the DOM
 				label_1.append(search);
 				label_2.append(select);
-				label_3.append(save_component);
-				label_4.append(discard_component);
+				label_3.append(recipe);
+				label_4.append(save_component);
+				label_5.append(discard_component);
 
-				div_component.append(label_1, label_2, label_3, label_4);
+				div_component.append(label_1, label_2, label_3, label_4, label_5);
 				components.append(div_component);
 
 				// Fetch names of components from back-end
@@ -168,6 +188,13 @@ document.addEventListener("DOMContentLoaded", () => {
 										document.querySelector('#component_status').textContent = 'Component Added.'
 										search.setAttribute("disabled", "true");
 										select.setAttribute("disabled", "true");
+										recipe.setAttribute("disabled", "true");
+
+										// save component recipe locally
+										if (document.querySelector(`#recipe${i}`).value != '' &&
+											!isNaN(document.querySelector(`#recipe${i}`).value)) {
+											sessionStorage.setItem(`recipe${i+1}`, document.querySelector(`#recipe${i}`).value);
+										}
 
 										// Ensuring the name of the product is stored already into session
 										if (sessionStorage.getItem('NAME') &&
@@ -181,9 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
 										// Set the input of components and name of the product
 										if (sessionStorage.length > 0) {
 											const length = sessionStorage.length;
-											//const values_to_send = document.createElement('input');
 
-											//let list = '';
 											for (let i = 0; i <= length; i++) {
 												if (document.querySelector('.to_send')) {
 													document.querySelector('.to_send').remove();
@@ -195,13 +220,15 @@ document.addEventListener("DOMContentLoaded", () => {
 											quantity.setAttribute('class', 'to_send');
 											quantity.setAttribute('hidden', 'true');
 
-											// POSSIBLE BUG
 											// Iterate over session storage keys
 											let componentNumber = 0;
 											for (let i = 0; i < length; i++) {
 												const key = sessionStorage.key(i);
 												const value = sessionStorage.getItem(key);
 												const regularExpression = new RegExp('component');
+												const regularExpression2 = new RegExp('recipe');
+
+												// Set component into form
 												if (regularExpression.test(key)) {
 													componentNumber++;
 
@@ -213,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
 													document.querySelector('form').append(components_to_send);
 												}
 
-												// Set name of each form input
+												// Set name, category or value into form
 												else if (key === 'NAME' || key === 'CATEGORY' || key === 'VALUE') {
 													const values_to_send = document.createElement('input');
 													values_to_send.setAttribute('class', 'to_send');
@@ -221,9 +248,17 @@ document.addEventListener("DOMContentLoaded", () => {
 													values_to_send.setAttribute('hidden', 'true');
 													values_to_send.setAttribute('name', key);
 													document.querySelector('form').append(values_to_send);
-												} //else {
-												//values_to_send.setAttribute('name', `component${i}`);
-												//}
+												}
+												// Set recipe into form
+												if (regularExpression2.test(key)) {
+													const recipe_form = document.createElement('input');
+													recipe_form.setAttribute('class', 'to_send');
+													recipe_form.setAttribute('name', key);
+													recipe_form.setAttribute('value', sessionStorage.getItem(key));
+													recipe_form.setAttribute('hidden', 'true');
+													document.querySelector('form').append(recipe_form);
+												}
+
 											}
 											quantity.setAttribute('value', componentNumber);
 											document.querySelector('form').append(quantity);
@@ -232,6 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
 									} else {
 										alert("Component already in use");
 									}
+
 									// Remove component locally
 									discard_component.onclick = () => {
 										if (sessionStorage.getItem(`component${i+1}`)) {

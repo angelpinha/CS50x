@@ -170,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		totalValue.setAttribute("placeholder", "Total");
 		totalValue.setAttribute("type", "text");
 		totalValue.setAttribute("readonly", "true");
+		totalValue.setAttribute("disabled", "true");
 		totalValue.setAttribute("id", `total_value${nField}`);
 
 		totalTitle.innerHTML = "Subtotal";
@@ -277,7 +278,28 @@ document.addEventListener("DOMContentLoaded", () => {
 					} else {
 						document.querySelector("#save_invoice").setAttribute("disabled", "true");
 					}
+
+					// Disable inputs after save item
+					itemInput.setAttribute("disabled", "true");
+					itemQuantity.setAttribute("disabled", "true");
+					unitValue.setAttribute("disabled", "true");
 				};
+				// Disable save button if any input is not filled
+				itemInput.addEventListener("keydown", function (event) {
+					if (event.key === 'Backspace') {
+						saveItem.setAttribute("disabled", "true");
+					}
+				});
+				itemQuantity.addEventListener("keyup", function (event) {
+					if (event.key === 'Backspace' || event.key === 'ArrowDown' && itemQuantity.value < 1) {
+						saveItem.setAttribute("disabled", "true");
+					}
+				});
+				unitValue.addEventListener("keyup", function (event) {
+					if (event.key === 'Backspace' && unitValue.value < 1) {
+						saveItem.setAttribute("disabled", "true");
+					}
+				});
 			}
 		};
 
@@ -305,6 +327,11 @@ document.addEventListener("DOMContentLoaded", () => {
 						option.onchange = () => {
 							itemInput.value = option.nextSibling.textContent.trim();
 							ITEMS[`item_${nField}`]["name"] = itemInput.value;
+
+							if (ITEMS[`item_${nField}`] && Object.keys(ITEMS[`item_${nField}`]).length === 4) {
+								saveItem.removeAttribute("disabled");
+							}
+
 
 						};
 					});
