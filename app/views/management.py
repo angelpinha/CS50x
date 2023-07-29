@@ -89,7 +89,7 @@ def product_deconstructor(P):
     result = [P["name"]]
     placeholder = ""
     for key, value in P.items():
-        if re.search("component", key):
+        if re.search("component", key) or re.search("recipe", key):
             result.append(value)
             placeholder += "?,"
     result.append(placeholder[:-1])
@@ -127,6 +127,7 @@ def new_product():
                 return redirect(url_for("management.new_product"))
             else:
                 PRODUCT[f"component_{i+1}"] = request.form.get(f"component{i+1}")
+                PRODUCT[f"recipe_{i+1}"] = request.form.get(f"recipe{i+1}")
 
         # Take the items ids and convert them into string
         item_ids = []
@@ -161,6 +162,15 @@ def new_product():
             WHERE name IN ({product_deconstructor(PRODUCT)[-1]})""",
             product_deconstructor(PRODUCT)[:-1],
         )
+
+        # TODO: Save recipe of the new product
+        for id_index in range(len(item_ids)):
+            database.execute(
+                """INSERT INTO recipe (product_id, item_id, quantity)
+                VALUES ((SELECT id FROM products WHERE description = ?), ?, ?)""",
+                (PRODUCT["name"], item_ids[id_index], float(PRODUCT[f'recipe_{id_index+1}']),),
+                )
+
         database.commit()
 
         flash(f"Product {PRODUCT['name']} created")
@@ -580,15 +590,15 @@ def new_purchase():
             )
 
             # Update product value (40% of profit)
+            #items_prices = database.execute(
+             #               """SELECT SUM(items.updated_price * recipe.quantity) *1.4
+              #              FROM items INNER JOIN recipe ON items.id = recipe.item_id""").fetchone()
             for item in range(len(Purchase)):
                 database.execute(
-                    """UPDATE products SET price = (SELECT SUM(updated_price) * 1.4
-                FROM items WHERE product_id = (SELECT product_id FROM items WHERE name = ?))
-                WHERE id = (SELECT product_id FROM items WHERE name = ?)""",
-                    (
-                        Purchase[item].name,
-                        Purchase[item].name,
-                    ),
+                    """UPDATE products SET price = (SELECT SUM(items.updated_price * recipe.quantity) *1.4
+                            FROM items INNER JOIN recipe ON items.id = recipe.item_id)
+                            WHERE id = (SELECT product_id FROM items WHERE name = ?)""",
+                    (Purchase[item].name,),
                 )
             database.commit()
             flash("New purchase saved")
