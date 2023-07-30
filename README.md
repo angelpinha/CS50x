@@ -1,8 +1,35 @@
-# CS50x - Final Project
+# IMS - Inventory Management Software
+#### Video Demo: <URL HERE>
+#### Description: 
 
-CS50x - Harvard's Introduction to Computer Science - Final Project
+IMS is a web application written in [Python](https://www.python.org/) with the [Flask](https://flask.palletsprojects.com/en/2.3.x/) Framework, It uses [SQLite](https://www.sqlite.org/index.html) for database management in the backend and [PicoCSS](https://picocss.com/) for the graphical interface in the frontend.
 
-Inventory Management Software
+It features authentication and management systems.
+
+The functionality of the authentication system includes:
+
+- Registering a new user
+- Logging in and out of the system
+- Changing your username and password
+- Setting up two-factor authentication
+- Recovering your account if you forget your password
+
+In addition, the software includes a set of functionalities that allow users to configure and initialize a management system based on cost center. Users can: 
+- Create items and products
+- Store supplier information
+- Add new suppliers
+- Register new purchases
+- Register sales
+
+The application enables management of raw materials, components, and finished products, as well as evaluation of an elementary financial state of business performance.
+
+#### Motivation:
+
+This software is our final project for [CS50x](https://cs50.harvard.edu/x/) Harvard University’s introduction to the intellectual enterprises of computer science and the art of programming.
+
+We would especially like to give **a huge thanks** to professor [David J. Malan](https://cs.harvard.edu/malan/) and all [CS50 Staff](https://cs50.harvard.edu/x/2023/staff/) for their clear and engaging teaching style, their generosity besides all the shared knowledge that opened the inmense world of computer science and programming to us.
+
+*This project is developed by [Angel Piña](https://github.com/angelpinha/) & [Nureddyn Ballout](https://github.com/nureddyn/), both students from Barinas - Venezuela.* 🇻🇪
 
 ---
 
@@ -10,7 +37,7 @@ Inventory Management Software
 
 ### Fast deployment:
 
-If you are in a hurry an just need to run the app, installing all the dependencies in your local machine, execute the following command in Bash:
+If you are in a hurry an just need to run the app, after installing all the dependencies in your local machine, execute the following command in Bash:
 
 ```Bash
   python run.py  
@@ -91,4 +118,3 @@ Enjoy!
 
 ---
 
-This project is developed by: [Angel Piña](https://github.com/angelpinha/) & [Nureddyn Ballout](https://github.com/nureddyn/)
