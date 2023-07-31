@@ -11,7 +11,7 @@ This software is our final project for [CS50x](https://cs50.harvard.edu/x/) Harv
 
 We would especially like to give a **huge thanks** to professor [David J. Malan](https://cs.harvard.edu/malan/) and all [CS50 Staff](https://cs50.harvard.edu/x/2023/staff/) for their clear and engaging teaching style, their generosity besides all the shared knowledge that opened the inmense world of computer science and programming to us.
 
-*This project is developed by [Angel Piña](https://github.com/angelpinha/) & [Nureddyn Ballout](https://github.com/nureddyn/), both students from Barinas - Venezuela.* 🇻🇪
+*This project was developed by [Angel Piña](https://github.com/angelpinha/) & [Nureddyn Ballout](https://github.com/nureddyn/), both students from Barinas - Venezuela.* 🇻🇪
 
 ## Description: 
 
