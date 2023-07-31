@@ -1,7 +1,9 @@
 # IMS - Inventory Management Software
 ## Video Demo:
 
-You can watch a brief App Video Demo by clicking on the following [Youtube](https://www.youtube.com/) link.
+You can watch a brief App Video Demo by clicking on the following [Youtube](https://youtu.be/kaeJOYoBBm4) link:
+
+https://youtu.be/kaeJOYoBBm4
 
 ## Motivation:
 
