@@ -5,7 +5,7 @@ You can watch a brief App Video Demo by clicking on the following [Youtube](http
 
 https://youtu.be/kaeJOYoBBm4
 
-## Motivation:
+## Acknowledgements:
 
 This software is our final project for [CS50x](https://cs50.harvard.edu/x/) Harvard University’s introduction to the intellectual enterprises of computer science and the art of programming.
 
