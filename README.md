@@ -15,7 +15,7 @@ We would especially like to give a **huge thanks** to professor [David J. Malan]
 
 ## Description: 
 
-IMS is a web application written in [Python](https://www.python.org/) with the [Flask](https://flask.palletsprojects.com/en/2.3.x/) Framework, It uses [SQLite](https://www.sqlite.org/index.html) for database management in the backend and [PicoCSS](https://picocss.com/) for the graphical interface in the frontend.
+IMS is a Web Application written in [Python](https://www.python.org/) with the [Flask](https://flask.palletsprojects.com/en/2.3.x/) Framework, It uses [SQLite](https://www.sqlite.org/index.html) for database management in the Backend and HTML, [PicoCSS](https://picocss.com/) and JavaScript for the user interface in the Frontend.
 
 It features authentication and management systems.
 
